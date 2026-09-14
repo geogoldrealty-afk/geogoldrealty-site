@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Geo Gold Realty Group LLC — New Jersey residential real estate, new construction, mortgage financing, and investment networking." />
+    <title>Geo Gold Realty | New Jersey Real Estate</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header" id="top">
+      <a class="brand" href="#top" aria-label="Geo Gold Realty home">
+        <span class="brand-mark">GG</span>
+        <span><strong>GEO GOLD</strong><small>REALTY GROUP</small></span>
+      </a>
+      <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+        <a href="#sell">Sell</a><a href="#buy">Buy</a><a href="#properties">Properties</a><a href="#communities">Communities</a><a href="#about">About</a><a href="#contact">Contact</a>
+      </nav>
+      <a class="header-phone" href="tel:+12018265730">(201) 826-5730</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-shade"></div>
+        <div class="hero-content">
+          <p class="eyebrow">New Jersey full-service real estate</p>
+          <h1>GEO GOLD<br />REALTY GROUP LLC</h1>
+          <p class="hero-copy">Residential sales, new construction, mortgage financing, and investment networking led by Broker of Record John Scardino Jr.</p>
+          <div class="hero-actions"><a class="button button-light" href="#properties">Search homes</a><a class="button button-outline" href="#sell">What is my home worth?</a></div>
+        </div>
+      </section>
+
+      <section class="split-intro" id="sell">
+        <div><p class="eyebrow gold">Thinking of selling?</p><h2>Discover what your home could be worth.</h2><p>Get a local, no-pressure valuation from a broker who knows the market block by block.</p></div>
+        <form class="compact-form lead-form" data-subject="Home valuation request">
+          <label>Property address<input name="address" required placeholder="Street address, city, ZIP" /></label>
+          <button class="button button-dark" type="submit">Request valuation</button>
+        </form>
+      </section>
+
+      <section class="search-panel" id="properties">
+        <div class="section-heading"><p class="eyebrow gold">Find your next home</p><h2>Property search</h2><p>Tell us what you are looking for, and we’ll put a tailored New Jersey search to work for you.</p></div>
+        <form class="property-form lead-form" data-subject="Property search request">
+          <div class="button-group" role="group" aria-label="Purchase type"><button type="button" class="choice active" data-choice="Buy">Buy</button><button type="button" class="choice" data-choice="Rent">Rent</button><input type="hidden" name="interest" value="Buy" /></div>
+          <label>City, address, or ZIP<input name="location" placeholder="Where would you like to live?" /></label>
+          <label>County<select name="county"><option value="">Any county</option><option>Bergen</option><option>Essex</option><option>Hudson</option><option>Passaic</option><option>Monmouth</option><option>Ocean</option></select></label>
+          <label>Maximum price<select name="max-price"><option value="">No maximum</option><option>$500,000</option><option>$750,000</option><option>$1,000,000</option><option>$1,500,000+</option></select></label>
+          <label>Beds<select name="beds"><option value="">Any</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option></select></label>
+          <button class="button button-dark" type="submit">Start my search</button>
+        </form>
+      </section>
+
+      <section class="feature-grid" id="buy">
+        <article class="image-card card-one"><div><p class="eyebrow">Buy with confidence</p><h2>A better way to find home.</h2><a href="#contact">Talk to John <span>→</span></a></div></article>
+        <article class="image-card card-two"><div><p class="eyebrow">Sell with strategy</p><h2>Local expertise. Elevated presentation.</h2><a href="#sell">Get a valuation <span>→</span></a></div></article>
+      </section>
+
+      <section class="stats" aria-label="Company statistics"><div><strong>3</strong><span>State broker licenses</span></div><div><strong>20+</strong><span>Years of local experience</span></div><div><strong>6</strong><span>New Jersey counties served</span></div><div><strong>1</strong><span>Dedicated point of contact</span></div></section>
+
+      <section class="section listings">
+        <div class="section-heading"><p class="eyebrow gold">Recently sold</p><h2>Past sales</h2><p>A selection of homes successfully represented by Geo Gold Realty Group.</p></div>
+        <div class="listing-grid">
+          <article class="listing"><div class="listing-photo photo-1"></div><p class="listing-price">$895,000</p><h3>32 Columbus Avenue</h3><p>Totowa, NJ · Residential · Sold</p></article>
+          <article class="listing"><div class="listing-photo photo-2"></div><p class="listing-price">$774,900</p><h3>147 Highland Cross</h3><p>Rutherford, NJ · Residential · Sold</p></article>
+          <article class="listing"><div class="listing-photo photo-3"></div><p class="listing-price">$709,000</p><h3>278 Warren Street</h3><p>Lyndhurst, NJ · 2–4 Family · Sold</p></article>
+          <article class="listing"><div class="listing-photo photo-4"></div><p class="listing-price">$569,000</p><h3>101 Beach Street</h3><p>Bloomfield, NJ · Residential · Sold</p></article>
+        </div>
+      </section>
+
+      <section class="broker" id="about"><div class="broker-image" role="img" aria-label="John Scardino Jr."></div><div class="broker-copy"><p class="eyebrow gold">Meet your broker</p><h2>John Scardino Jr.</h2><p class="large">An experienced broker, lender, and trusted resource for New Jersey buyers, sellers, and investors.</p><p>John combines personal attention with broad real-estate knowledge—from residential sales and new construction to mortgage financing and investment networking.</p><dl><div><dt>Broker of Record</dt><dd>NJ License #1223971</dd></div><div><dt>Senior Loan Officer</dt><dd>Alpine Mortgage · NMLS #261624</dd></div><div><dt>Broker License</dt><dd>New Jersey · New York · Florida</dd></div></dl><a class="text-link" href="#contact">Connect with John →</a></div></section>
+
+      <section class="section communities" id="communities"><div class="section-heading"><p class="eyebrow gold">Local knowledge</p><h2>Communities we serve</h2></div><div class="community-grid"><a href="#contact" class="community c1">Bergen County</a><a href="#contact" class="community c2">Essex County</a><a href="#contact" class="community c3">Hudson County</a><a href="#contact" class="community c4">Passaic County</a><a href="#contact" class="community c5">Monmouth County</a><a href="#contact" class="community c6">Ocean County</a></div></section>
+
+      <section class="testimonial"><blockquote>“John made the entire process feel clear, organized, and personal. His local knowledge made all the difference.”</blockquote><p>— Geo Gold Realty client</p></section>
+
+      <section class="contact" id="contact"><div><p class="eyebrow gold">Let’s talk</p><h2>Ready when you are.</h2><p>Whether you are buying, selling, investing, or simply weighing your options, start with a conversation.</p><p><a href="tel:+12018265730">(201) 826-5730</a><br /><a href="mailto:hello@geogoldrealty.com">hello@geogoldrealty.com</a><br />230 Passaic Ave, Fairfield, NJ 07004</p></div><form class="contact-form lead-form" data-subject="Website contact request"><label>Name<input name="name" required /></label><label>Email<input type="email" name="email" required /></label><label>Phone<input type="tel" name="phone" /></label><label>I’m interested in<select name="need"><option>Buying</option><option>Selling</option><option>Investing</option><option>Referral</option></select></label><label class="wide">Message<textarea name="message" rows="4"></textarea></label><button class="button button-dark" type="submit">Send inquiry</button><p class="form-note" aria-live="polite"></p></form></section>
+    </main>
+    <footer><a class="brand footer-brand" href="#top"><span class="brand-mark">GG</span><span><strong>GEO GOLD</strong><small>REALTY GROUP LLC</small></span></a><p>© <span id="year"></span> Geo Gold Realty Group LLC. All rights reserved.</p><p>Broker of Record: John Scardino Jr. · NJ License #1223971</p></footer>
+    <script src="app.js"></script>
+  </body>
+</html>
+
