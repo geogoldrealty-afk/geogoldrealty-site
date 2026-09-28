@@ -8,12 +8,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" crossorigin href="/assets/index-f7zIrof9.css">
+  <link rel="stylesheet" href="/repair.css" />
   </head>
   <body>
     <header class="site-header" id="top">
       <a class="brand" href="#top" aria-label="Geo Gold Realty home">
-        <img class="brand-logo" src="/geo-gold-logo.png" alt="Geo Gold Realty Group LLC" />
+        <img class="brand-logo" src="/assets/geo-gold-logo-B4MOCR03.png" alt="Geo Gold Realty Group LLC" />
       </a>
       <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
       <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
@@ -35,22 +36,32 @@
 
       <section class="split-intro" id="sell">
         <div><p class="eyebrow gold">Thinking of selling?</p><h2>Discover what your home could be worth.</h2><p>Get a local, no-pressure valuation from a broker who knows the market block by block.</p></div>
-        <form class="compact-form lead-form" data-subject="Home valuation request">
+        <form class="compact-form lead-form" data-kind="valuation">
           <label>Property address<input name="address" required placeholder="Street address, city, ZIP" /></label>
-          <button class="button button-dark" type="submit">Request valuation</button>
+          <label>Your name<input name="name" required autocomplete="name" maxlength="120" /></label>
+          <label>Email<input name="email" type="email" required autocomplete="email" maxlength="254" /></label>
+          <label>Phone (optional)<input name="phone" type="tel" autocomplete="tel" maxlength="25" /></label>
+          <p class="form-help">John will review your property and contact you. This is a request for a broker opinion, not an instant automated estimate.</p>
+          <label class="consent"><input type="checkbox" name="consent" value="yes" required />I agree that John’s team can contact me about this request. I can ask them to stop at any time.</label>
+          <label class="honeypot" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off" /></label>
+          <button class="button button-dark" type="submit">Request valuation</button><p class="form-note" role="status" aria-live="polite"></p>
         </form>
       </section>
 
       <section class="search-panel" id="properties">
-        <div class="section-heading"><p class="eyebrow gold">Find your next home</p><h2>Property search</h2><p>Tell us what you are looking for, and we’ll put a tailored New Jersey search to work for you.</p></div>
-        <form class="property-form lead-form" data-subject="Property search request">
+        <div class="section-heading"><p class="eyebrow gold">Find your next home</p><h2>Property search</h2><p>Search active GSMLS listings in our six New Jersey service counties.</p></div>
+        <form class="property-form" id="property-search">
           <div class="button-group" role="group" aria-label="Purchase type"><button type="button" class="choice active" data-choice="Buy">Buy</button><button type="button" class="choice" data-choice="Rent">Rent</button><input type="hidden" name="interest" value="Buy" /></div>
-          <label>City, address, or ZIP<input name="location" placeholder="Where would you like to live?" /></label>
+          <label>City or ZIP<input name="location" placeholder="For example, Newark or 07102" /></label>
           <label>County<select name="county"><option value="">Any county</option><option>Bergen</option><option>Essex</option><option>Hudson</option><option>Passaic</option><option>Monmouth</option><option>Ocean</option></select></label>
-          <label>Maximum price<select name="max-price"><option value="">No maximum</option><option>$500,000</option><option>$750,000</option><option>$1,000,000</option><option>$1,500,000+</option></select></label>
-          <label>Beds<select name="beds"><option value="">Any</option><option>1+</option><option>2+</option><option>3+</option><option>4+</option></select></label>
-          <button class="button button-dark" type="submit">Start my search</button>
+          <label>Maximum price<select name="maxPrice"><option value="">No maximum</option><option value="500000">$500,000</option><option value="750000">$750,000</option><option value="1000000">$1,000,000</option><option value="1500000">$1,500,000</option></select></label>
+          <label>Beds<select name="beds"><option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label>
+          <button class="button button-dark" type="submit">Search homes</button>
         </form>
+        <p id="search-status" role="status" aria-live="polite">Choose an area and select Search homes.</p>
+        <div id="search-results" class="listing-grid"></div>
+        <p id="search-help" hidden>Need more options? <a href="#contact" id="request-search">Ask John for a tailored search</a>.</p>
+        <p class="idx-disclosure">Listing data supplied by Garden State MLS. Information is deemed reliable but is not guaranteed. Availability can change. Contact the listing broker or John for current details.</p>
       </section>
 
       <section class="feature-grid" id="buy">
@@ -76,10 +87,11 @@
 
       <section class="testimonial"><blockquote>“John made the entire process feel clear, organized, and personal. His local knowledge made all the difference.”</blockquote><p>— Geo Gold Realty client</p></section>
 
-      <section class="contact" id="contact"><div><p class="eyebrow gold">Let’s talk</p><h2>Ready when you are.</h2><p>Whether you are buying, selling, investing, or simply weighing your options, start with a conversation.</p><p><a href="tel:+12018265730">(201) 826-5730</a><br /><a href="mailto:hello@geogoldrealty.com">hello@geogoldrealty.com</a><br />230 Passaic Ave, Fairfield, NJ 07004</p></div><form class="contact-form lead-form" data-subject="Website contact request"><label>Name<input name="name" required /></label><label>Email<input type="email" name="email" required /></label><label>Phone<input type="tel" name="phone" /></label><label>I’m interested in<select name="need"><option>Buying</option><option>Selling</option><option>Investing</option><option>Referral</option></select></label><label class="wide">Message<textarea name="message" rows="4"></textarea></label><button class="button button-dark" type="submit">Send inquiry</button><p class="form-note" aria-live="polite"></p></form></section>
+      <section class="contact" id="contact"><div><p class="eyebrow gold">Let’s talk</p><h2>Ready when you are.</h2><p>Whether you are buying, selling, investing, or simply weighing your options, start with a conversation.</p><p><a href="tel:+12018265730">(201) 826-5730</a><br /><a href="mailto:geogoldrealty@gmail.com">geogoldrealty@gmail.com</a><br />230 Passaic Ave, Fairfield, NJ 07004</p></div><form class="contact-form lead-form" data-kind="contact"><label>Name<input name="name" required /></label><label>Email<input type="email" name="email" required /></label><label>Phone<input type="tel" name="phone" /></label><label>I’m interested in<select name="need"><option>Buying</option><option>Selling</option><option>Investing</option><option>Referral</option></select></label><label class="wide">Message<textarea name="message" rows="4"></textarea></label><label class="consent wide"><input type="checkbox" name="consent" value="yes" required />I agree that John’s team can contact me about this request. I can ask them to stop at any time.</label><label class="honeypot" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off" /></label><button class="button button-dark" type="submit">Send inquiry</button><p class="form-note" aria-live="polite"></p></form></section>
     </main>
-    <footer><a class="brand footer-brand" href="#top"><img class="brand-logo" src="/geo-gold-logo.png" alt="Geo Gold Realty Group LLC" /></a><p>© <span id="year"></span> Geo Gold Realty Group LLC. All rights reserved.</p><p>Broker of Record: John Scardino Jr. · NJ License #1223971</p></footer>
-    <script src="app.js"></script>
+    <footer><a class="brand footer-brand" href="#top"><img class="brand-logo" src="/assets/geo-gold-logo-B4MOCR03.png" alt="Geo Gold Realty Group LLC" /></a><p>© <span id="year"></span> Geo Gold Realty Group LLC. All rights reserved.</p><p>Broker of Record: John Scardino Jr. · NJ License #1223971</p></footer>
+    <script type="module" src="/app.js"></script>
   </body>
 </html>
+
 

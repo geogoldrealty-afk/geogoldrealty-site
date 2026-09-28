@@ -1,0 +1,13 @@
+.env*
+*.local
+*PRIVATE*
+apps-script/
+tests/
+docs/
+scripts/
+README.md
+node_modules/
+crm/
+content/
+private/
+

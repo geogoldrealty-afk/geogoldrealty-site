@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env*
+!.env.example
+.vercel/
+*.local
+private/
+crm/*generated.csv
+crm/real-contacts.csv
+
