@@ -1,0 +1,3 @@
+queue_date,sequence_number,contact_id,full_name,channel,phone,email,relationship,need_angle,message_draft,wa_me_link,status,sent_by,reply_summary,next_action,next_follow_up_date
+2026-06-21,1,SC-0001,Sample Contact,WhatsApp,+10000000000,sample@example.com,Past client,Referral check,"Hey Sample, it's John Scardino. Quick check-in. Do you or someone close to you need help buying, selling, flipping, or making sense of a property this year?",https://web.whatsapp.com/send?phone=10000000000&text=Hey%20Sample%2C%20it's%20John%20Scardino.%20Quick%20check-in.%20Do%20you%20or%20someone%20close%20to%20you%20need%20help%20buying%2C%20selling%2C%20flipping%2C%20or%20making%20sense%20of%20a%20property%20this%20year%3F,queued,John,,,
+

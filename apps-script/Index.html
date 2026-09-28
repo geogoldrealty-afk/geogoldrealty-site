@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body{margin:0;background:#f5f5f4;color:#172019;font:16px Arial,sans-serif}.card{max-width:620px;margin:32px auto;background:#fff;padding:28px;border-radius:14px;box-shadow:0 8px 30px #00000012}h1{font-size:28px;margin:0 0 8px}.property{color:#496253;margin:0 0 24px}label{display:block;font-weight:700;margin:15px 0 6px}input,textarea{box-sizing:border-box;width:100%;padding:12px;border:1px solid #c7cec9;border-radius:8px;font:inherit}button{width:100%;margin-top:20px;padding:13px;border:0;border-radius:8px;background:#173f2a;color:white;font-weight:700;font-size:16px}.consent{display:flex;gap:9px;align-items:flex-start;font-size:14px}.consent input{width:auto;margin-top:3px}.hidden{position:absolute;left:-10000px}.status{margin-top:16px}.error{color:#a12222}.success{color:#176b37}
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <? if (property && String(property.status).toLowerCase() === 'active') { ?>
+        <h1>Ask about this property</h1>
+        <p class="property"><?= [property.address, property.municipality, property.county, property.state].filter(Boolean).join(', ') ?></p>
+        <form id="lead-form">
+          <input type="hidden" name="property_id" value="<?= propertyId ?>">
+          <input type="hidden" name="source" value="<?= source ?>">
+          <input type="hidden" name="campaign" value="<?= campaign ?>">
+          <label>First name</label><input name="first_name" value="<?= prefill.first_name ?>" required autocomplete="given-name">
+          <label>Last name</label><input name="last_name" value="<?= prefill.last_name ?>" autocomplete="family-name">
+          <label>Email</label><input name="email" value="<?= prefill.email ?>" type="email" autocomplete="email">
+          <label>Phone</label><input name="phone" value="<?= prefill.phone ?>" type="tel" autocomplete="tel">
+          <label>Message</label><textarea name="message" rows="4" placeholder="What would you like to know?"><?= prefill.message ?></textarea>
+          <label class="hidden">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+          <label class="consent"><input type="checkbox" name="consent" value="yes" required><span>I agree that John Scardino or his team can contact me about this property. I can ask them to stop at any time.</span></label>
+          <button type="submit">Send property inquiry</button>
+          <p id="status" class="status" aria-live="polite"></p>
+        </form>
+        <script>
+          document.getElementById('lead-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const status = document.getElementById('status');
+            status.className = 'status'; status.textContent = 'Sending...';
+            const form = event.currentTarget;
+            const payload = Object.fromEntries(new FormData(form).entries());
+            google.script.run
+              .withSuccessHandler((result) => {
+                if (!result || !result.ok) {
+                  status.className = 'status error';
+                  status.textContent = result && result.error ? result.error : 'The form could not be sent.';
+                  return;
+                }
+                status.className = 'status success';
+                status.textContent = 'Thank you. John’s team will contact you.';
+                form.querySelector('button').disabled = true;
+              })
+              .withFailureHandler((error) => {
+                status.className = 'status error';
+                status.textContent = error && error.message ? error.message : 'The form could not be sent.';
+              })
+              .submitLead(payload);
+          });
+        </script>
+      <? } else { ?>
+        <h1>This property link is not active</h1>
+        <p>Please contact John’s team for current information.</p>
+      <? } ?>
+    </main>
+  </body>
+</html>
+

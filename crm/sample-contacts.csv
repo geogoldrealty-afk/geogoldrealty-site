@@ -1,0 +1,7 @@
+contact_id,first_name,last_name,full_name,primary_phone,primary_email,relationship,source,market,state,need_type,budget_range,timeline,status,last_touch_date,next_follow_up_date,owner,notes,opt_out
+SC-0001,Michael,Rossi,Michael Rossi,+12125550101,michael@example.com,Friend,iPhone contacts,New York,NY,Referral unknown,Unknown,Unknown,queued,,,John,Knows local families,no
+SC-0002,Lena,Martinez,Lena Martinez,+17185550102,lena@example.com,Past buyer,iPhone contacts,New Jersey,NJ,Buying,$800K-$1.2M,This year,queued,,,Angelo,Ask about move-up plans,no
+SC-0003,David,Chen,David Chen,+19175550103,david@example.com,Investor,Manual import,New York,NY,Flipping,$500K-$900K,Immediate,queued,,,John,May know cash buyers,no
+SC-0004,Sarah,Bennett,Sarah Bennett,+16465550104,sarah@example.com,Attorney referral,Manual import,Florida,FL,Selling,Unknown,90 days,queued,,,Angelo,Potential probate referrals,no
+SC-0005,Anthony,Caruso,Anthony Caruso,+13475550105,anthony@example.com,Contractor,iPhone contacts,New York,NY,Construction,$1M+,Unknown,queued,,,John,Can refer renovation clients,no
+
