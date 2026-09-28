@@ -1,7 +1,0 @@
-{
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "functions": { "api/idx/listings.js": { "maxDuration": 30 }, "api/leads.js": { "maxDuration": 30 } }
-}
-
