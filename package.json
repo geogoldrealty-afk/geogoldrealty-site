@@ -1,0 +1,16 @@
+{
+  "name": "geogold-website-repair",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.js",
+    "build": "vite build",
+    "test": "node --test tests/*.test.js",
+    "generate:outreach": "node scripts/generate-outreach.js"
+  },
+  "dependencies": {
+    "vite": "^7.0.0",
+    "sharp": "^0.35.3"
+  }
+}
