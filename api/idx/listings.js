@@ -161,3 +161,15 @@ RetsSession.prototype.start = async function diagnosticStart(...args) {
     throw error;
   }
 };
+
+
+// Safe RETS request-stage diagnostic.
+const originalRetsText = RetsSession.prototype.text;
+RetsSession.prototype.text = async function diagnosticText(...args) {
+  try {
+    return await originalRetsText.apply(this, args);
+  } catch (error) {
+    console.error('IDX RETS listing request failed after session start.');
+    throw error;
+  }
+};
