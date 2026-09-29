@@ -144,3 +144,20 @@ export default async function handler(request, response) {
     if (session) await session.close();
   }
 }
+
+
+// Safe session-stage diagnostic: no credentials or provider response is logged.
+const originalRetsStart = RetsSession.prototype.start;
+RetsSession.prototype.start = async function diagnosticStart(...args) {
+  try {
+    return await originalRetsStart.apply(this, args);
+  } catch (error) {
+    const message = String(error?.message || '');
+    const stage = message.includes('feed settings') ? 'configuration'
+      : message.includes('did not start') ? 'initial-session'
+      : message.includes('rejected') ? 'digest-auth'
+      : message.includes('timeout') ? 'network-timeout' : 'session';
+    console.error(`IDX RETS session failed at ${stage}.`);
+    throw error;
+  }
+};
