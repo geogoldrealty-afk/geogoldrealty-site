@@ -38,22 +38,38 @@ function prepareInquiry(message,kind='property-search') {
 function searchSummary(){return [...new FormData(search).entries()].filter(([,value])=>value).map(([key,value])=>`${key}: ${value}`).join(', ');}
 document.querySelector('#request-search').addEventListener('click',()=>prepareInquiry(`Please help me find a property. ${searchSummary()}`));
 const textElement=(tag,text,className='')=>{const el=document.createElement(tag);el.textContent=text;el.className=className;return el;};
+const results=document.querySelector('#search-results');
+const seeMore=document.querySelector('#see-more-homes');
+const pageSize=6;
+let remainingListings=[];
+let totalListings=0;
+function appendListings(listings){
+ for(const listing of listings){
+  const card=document.createElement('article');card.className='result-card';
+  if(/^data:image\/(jpeg|png);base64,/.test(listing.image||'')){const image=new Image();image.src=listing.image;image.alt=listing.title;image.loading='lazy';card.append(image);}
+  card.append(textElement('p',money(listing.price)+(listing.market==='rent'?' / month':''),'listing-price'),textElement('h3',listing.title),textElement('p',`${listing.city}, NJ ${listing.postalCode||''}`),textElement('p',`${listing.beds} beds · ${listing.baths} baths · MLS ${listing.mlsNumber}`),textElement('p',`Listed by ${listing.brokerName||'GSMLS participating broker'}${listing.brokerContact?' · '+listing.brokerContact:''}`,'result-broker'));
+  if(listing.isIdxListing)card.append(textElement('p','IDX Listing','idx-badge'));
+  const ask=textElement('button','Ask about this home','button button-dark');ask.type='button';ask.addEventListener('click',()=>prepareInquiry(`I am interested in MLS ${listing.mlsNumber}: ${listing.title}, ${listing.city}, NJ. Please send current details.`));card.append(ask);results.append(card);
+ }
+}
+seeMore.addEventListener('click',()=>{
+ const next=remainingListings.splice(0,pageSize);appendListings(next);
+ const shown=totalListings-remainingListings.length;
+ document.querySelector('#search-status').textContent=`Showing ${shown} of ${totalListings} matching homes. Listing availability can change.`;
+ seeMore.hidden=remainingListings.length===0;
+});
 search.addEventListener('submit',async(event)=>{
  event.preventDefault();const button=search.querySelector('[type=submit]');if(button.disabled)return;
- const status=document.querySelector('#search-status');const results=document.querySelector('#search-results');
- button.disabled=true;status.textContent='Searching live GSMLS listings…';results.replaceChildren();document.querySelector('#search-help').hidden=true;
- const params=new URLSearchParams(new FormData(search));params.set('market',search.elements.interest.value.toLowerCase());params.delete('interest');params.set('limit','6');
+ const status=document.querySelector('#search-status');
+ button.disabled=true;status.textContent='Searching live GSMLS listings…';results.replaceChildren();seeMore.hidden=true;remainingListings=[];totalListings=0;document.querySelector('#search-help').hidden=true;
+ const params=new URLSearchParams(new FormData(search));params.set('market',search.elements.interest.value.toLowerCase());params.delete('interest');params.set('limit','12');
  try {
   const response=await fetch(`/api/idx/listings?${params}`,{signal:AbortSignal.timeout(28000)});const data=await response.json();
   if(!response.ok||!Array.isArray(data.listings))throw new Error('Live listings could not load. Please ask John for a tailored search.');
-  status.textContent=data.listings.length?`${data.listings.length} matching homes shown. Listing availability can change.`:'No matching homes were returned. Try another area or fewer filters.';
-  for(const listing of data.listings){
-   const card=document.createElement('article');card.className='result-card';
-   if(/^data:image\/(jpeg|png);base64,/.test(listing.image||'')){const image=new Image();image.src=listing.image;image.alt=listing.title;image.loading='lazy';card.append(image);}
-   card.append(textElement('p',money(listing.price)+(listing.market==='rent'?' / month':''),'listing-price'),textElement('h3',listing.title),textElement('p',`${listing.city}, NJ ${listing.postalCode||''}`),textElement('p',`${listing.beds} beds · ${listing.baths} baths · MLS ${listing.mlsNumber}`),textElement('p',`Listed by ${listing.brokerName||'GSMLS participating broker'}${listing.brokerContact?' · '+listing.brokerContact:''}`,'result-broker'));
-   if(listing.isIdxListing)card.append(textElement('p','IDX Listing','idx-badge'));
-   const ask=textElement('button','Ask about this home','button button-dark');ask.type='button';ask.addEventListener('click',()=>prepareInquiry(`I am interested in MLS ${listing.mlsNumber}: ${listing.title}, ${listing.city}, NJ. Please send current details.`));card.append(ask);results.append(card);
-  }
+  totalListings=data.listings.length;
+  const firstPage=data.listings.slice(0,pageSize);remainingListings=data.listings.slice(pageSize);appendListings(firstPage);
+  status.textContent=totalListings?`Showing ${firstPage.length} of ${totalListings} matching homes. Listing availability can change.`:'No matching homes were returned. Try another area or fewer filters.';
+  seeMore.hidden=remainingListings.length===0;
  }catch(error){status.textContent=error.name==='TimeoutError'?'The listing service took too long. Try again or ask John for help.':error.message;}
  finally{button.disabled=false;document.querySelector('#search-help').hidden=false;}
 });
