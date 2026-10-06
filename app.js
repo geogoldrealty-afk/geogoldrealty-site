@@ -49,7 +49,7 @@ function appendListings(listings){
   if(/^data:image\/(jpeg|png);base64,/.test(listing.image||'')){const image=new Image();image.src=listing.image;image.alt=listing.title;image.loading='lazy';card.append(image);}
   card.append(textElement('p',money(listing.price)+(listing.market==='rent'?' / month':''),'listing-price'),textElement('h3',listing.title),textElement('p',`${listing.city}, NJ ${listing.postalCode||''}`),textElement('p',`${listing.beds} beds · ${listing.baths} baths · MLS ${listing.mlsNumber}`),textElement('p',`Listed by ${listing.brokerName||'GSMLS participating broker'}${listing.brokerContact?' · '+listing.brokerContact:''}`,'result-broker'));
   if(listing.isIdxListing)card.append(textElement('p','IDX Listing','idx-badge'));
-  const view=document.createElement('a');view.className='button button-dark';view.href=`/property.html?mls=${encodeURIComponent(listing.mlsNumber)}`;view.textContent='View property';view.addEventListener('click',()=>sessionStorage.setItem(`geogold-listing-${listing.mlsNumber}`,JSON.stringify(listing)));
+  const view=document.createElement('a');view.className='button button-dark';view.href=`/property.html?mls=${encodeURIComponent(listing.mlsNumber)}&market=${encodeURIComponent(listing.market||'buy')}`;view.textContent='View property';
   const ask=textElement('button','Ask about this home','button button-dark');ask.type='button';ask.addEventListener('click',()=>prepareInquiry(`I am interested in MLS ${listing.mlsNumber}: ${listing.title}, ${listing.city}, NJ. Please send current details.`));card.append(view,ask);results.append(card);
  }
 }
