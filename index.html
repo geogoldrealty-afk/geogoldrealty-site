@@ -18,7 +18,7 @@
       </a>
       <button class="menu-toggle" aria-expanded="false" aria-controls="site-nav">Menu</button>
       <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
-        <a href="#sell">Sell</a><a href="#buy">Buy</a><a href="#properties">Properties</a><a href="#communities">Communities</a><a href="#about">About</a><a href="#contact">Contact</a>
+        <a href="#sell">Sell</a><a href="/property-search.html?market=buy">Buy</a><a href="/property-search.html?market=rent">Rent</a><a href="/property-search.html?market=buy">Properties</a><a href="#communities">Communities</a><a href="#about">About</a><a href="#contact">Contact</a>
       </nav>
       <a class="header-phone" href="tel:+12018265730">(201) 826-5730</a>
     </header>
@@ -30,7 +30,7 @@
           <p class="eyebrow">New Jersey full-service real estate</p>
           <h1>GEO GOLD<br />REALTY GROUP LLC</h1>
           <p class="hero-copy">Residential sales, new construction, mortgage financing, and investment networking led by Broker of Record John Scardino Jr.</p>
-          <div class="hero-actions"><a class="button button-light" href="#properties">Search homes</a><a class="button button-outline" href="#sell">What is my home worth?</a></div>
+          <div class="hero-actions"><a class="button button-light" href="/property-search.html?market=buy">Search homes</a><a class="button button-outline" href="#sell">What is my home worth?</a></div>
         </div>
       </section>
 
@@ -49,20 +49,8 @@
       </section>
 
       <section class="search-panel" id="properties">
-        <div class="section-heading"><p class="eyebrow gold">Find your next home</p><h2>Property search</h2><p>Search active GSMLS listings in our six New Jersey service counties.</p></div>
-        <form class="property-form" id="property-search">
-          <div class="button-group" role="group" aria-label="Purchase type"><button type="button" class="choice active" data-choice="Buy">Buy</button><button type="button" class="choice" data-choice="Rent">Rent</button><input type="hidden" name="interest" value="Buy" /></div>
-          <label>City or ZIP<input name="location" placeholder="For example, Newark or 07102" /></label>
-          <label>County<select name="county"><option value="">Any county</option><option>Bergen</option><option>Essex</option><option>Hudson</option><option>Passaic</option><option>Monmouth</option><option>Ocean</option></select></label>
-          <label>Maximum price<select name="maxPrice"><option value="">No maximum</option><option value="500000">$500,000</option><option value="750000">$750,000</option><option value="1000000">$1,000,000</option><option value="1500000">$1,500,000</option></select></label>
-          <label>Beds<select name="beds"><option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label>
-          <button class="button button-dark" type="submit">Search homes</button>
-        </form>
-        <p id="search-status" role="status" aria-live="polite">Choose an area and select Search homes.</p>
-        <div id="search-results" class="listing-grid"></div>
-        <button class="button button-dark" type="button" id="see-more-homes" hidden>See more homes</button>
-        <p id="search-help" hidden>Need more options? <a href="#contact" id="request-search">Ask John for a tailored search</a>.</p>
-        <div class="idx-disclosure"><p>The data displayed relating to real estate for sale comes in part from the IDX Program of Garden State Multiple Listing Service, L.L.C. Real estate listings held by other brokerage firms are marked as IDX Listing.</p><p>Information deemed reliable but not guaranteed. Copyright © <span id="idx-year"></span> Garden State Multiple Listing Service, L.L.C. All rights reserved.</p><p>Notice: The dissemination of listings displayed herein does not constitute the consent required by N.J.A.C. 11:5.6.1(n) for the advertisement of listings exclusively for sale by another broker. Any such consent must be obtained in writing from the listing broker.</p><p>This information is being provided for Consumers’ personal, non-commercial use and may not be used for any purpose other than to identify prospective properties Consumers may be interested in purchasing.</p></div>
+        <div class="section-heading"><p class="eyebrow gold">Find your next home</p><h2>Property search</h2><p>Explore current Garden State MLS listings on our dedicated search page.</p></div>
+        <p><a class="button button-dark" href="/property-search.html?market=buy">READY TO BUY</a></p>
       </section>
 
       <section class="feature-grid" id="buy">
