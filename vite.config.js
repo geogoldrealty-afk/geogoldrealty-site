@@ -5,7 +5,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         home: 'index.html',
-        property: 'property.html'
+        property: 'property.html',
+        propertySearch: 'property-search.html'
       }
     }
   }
