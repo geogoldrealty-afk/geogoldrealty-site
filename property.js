@@ -41,9 +41,13 @@ function attachInquiryModal(listing) {
   const dialog = modal?.querySelector('.property-modal__dialog');
   const form = modal?.querySelector('#property-inquiry-form');
   let priorFocus;
+  let closeTimer;
+  const status = modal?.querySelector('.property-modal__status');
 
   const close = () => {
     if (!modal || modal.hidden) return;
+    if (closeTimer) window.clearTimeout(closeTimer);
+    closeTimer = undefined;
     modal.hidden = true;
     document.body.classList.remove('property-modal-open');
     openButton?.focus();
@@ -51,6 +55,8 @@ function attachInquiryModal(listing) {
   const open = () => {
     if (!modal) return;
     priorFocus = document.activeElement;
+    form?.reset();
+    if (status) status.textContent = '';
     modal.hidden = false;
     document.body.classList.add('property-modal-open');
     dialog?.focus();
@@ -65,7 +71,6 @@ function attachInquiryModal(listing) {
   form?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const submit = form.querySelector('button[type="submit"]');
-    const status = form.querySelector('.property-modal__status');
     const fields = new FormData(form);
     const name = [fields.get('first_name'), fields.get('last_name')].map((value) => String(value || '').trim()).filter(Boolean).join(' ');
     const payload = {
@@ -91,7 +96,8 @@ function attachInquiryModal(listing) {
       const result = await response.json();
       if (!response.ok || !result.ok || !result.reference) throw new Error('Lead was not saved.');
       form.reset();
-      status.textContent = `Thank you — your inquiry was sent. Reference: ${result.reference}`;
+      status.textContent = 'Thank you — your inquiry was sent.';
+      closeTimer = window.setTimeout(close, 1400);
     } catch {
       status.textContent = 'We could not confirm your request. Please call John at (201) 826-5730 or email geogoldrealty@gmail.com.';
     } finally {
