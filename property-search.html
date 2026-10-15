@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Search active Garden State MLS listings with Geo Gold Realty." />
+  <title>Property Search | Geo Gold Realty</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" crossorigin href="/assets/index-f7zIrof9.css" />
+  <link rel="stylesheet" href="/repair.css" />
+  <style>
+    .search-page{max-width:1280px;margin:0 auto;padding:7rem 2rem 4rem}.search-page h1{margin:.25rem 0 1rem}.search-toolbar{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr .7fr auto;gap:.8rem;align-items:end;padding:1.25rem;background:#f5f2eb}.search-toolbar label{display:grid;gap:.35rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}.search-toolbar input,.search-toolbar select{min-height:46px;border:1px solid #c8c1b6;padding:.65rem;background:#fff}.search-tabs{display:flex;gap:.5rem;margin:1.25rem 0}.search-tabs button{min-width:100px}.search-tabs .active{background:#050505;color:#fff}.search-results{margin-top:1.5rem}.search-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem}.search-card{background:#fff;border:1px solid #e4e0d8;padding:.9rem}.search-card img{width:100%;aspect-ratio:4/3;object-fit:cover}.search-card h2{font-size:1.15rem;margin:.45rem 0}.search-card p{margin:.35rem 0}.search-price{font:1.55rem 'Playfair Display',serif}.result-actions{display:flex;gap:.5rem;margin-top:.8rem}.result-actions .button{flex:1;text-align:center}.search-empty{padding:2rem;background:#f5f2eb}.idx-disclosure{margin-top:2rem}@media(max-width:900px){.search-toolbar{grid-template-columns:repeat(2,1fr)}.search-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.search-page{padding:5rem 1rem 3rem}.search-toolbar,.search-grid{grid-template-columns:1fr}.search-toolbar button{width:100%}}
+  </style>
+</head>
+<body>
+  <header class="site-header" id="top">
+    <a class="brand" href="/" aria-label="Geo Gold Realty home"><img class="brand-logo" src="/assets/geo-gold-logo-B4MOCR03.png" alt="Geo Gold Realty Group LLC" /></a>
+    <nav class="site-nav open" aria-label="Primary navigation"><a href="/#sell">Sell</a><a href="/property-search.html?market=buy">Buy</a><a href="/property-search.html?market=rent">Rent</a><a href="/property-search.html?market=buy">Properties</a><a href="/#communities">Communities</a><a href="/#about">About</a><a href="/#contact">Contact</a></nav>
+    <a class="header-phone" href="tel:+12018265730">(201) 826-5730</a>
+  </header>
+  <main class="search-page">
+    <p class="eyebrow gold">Geo Gold Realty</p><h1>Search homes</h1><p>Explore active GSMLS listings. Refine the results by area, county, price, or bedrooms.</p>
+    <div class="search-tabs" role="group" aria-label="Listing type"><button class="button active" type="button" data-market="buy">Buy</button><button class="button button-outline" type="button" data-market="rent">Rent</button></div>
+    <form class="search-toolbar" id="listing-search">
+      <label>City or ZIP<input name="location" placeholder="e.g., Franklin Lakes or 07417" /></label>
+      <label>County<select name="county"><option value="">Any county</option><option>Bergen</option><option>Essex</option><option>Hudson</option><option>Passaic</option><option>Monmouth</option><option>Ocean</option></select></label>
+      <label>Maximum price<select name="maxPrice"><option value="">No maximum</option><option value="500000">$500,000</option><option value="750000">$750,000</option><option value="1000000">$1,000,000</option><option value="1500000">$1,500,000</option></select></label>
+      <label>Beds<select name="beds"><option value="">Any</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></label>
+      <label>Sort<select name="sort"><option value="newest">Newest</option><option value="priceDesc">Price high to low</option><option value="priceAsc">Price low to high</option></select></label>
+      <button class="button button-dark" type="submit">Search</button>
+    </form>
+    <p id="search-status" role="status" aria-live="polite">Choose filters and select Search.</p>
+    <section class="search-results"><div id="search-results" class="search-grid"></div><button id="see-more-homes" class="button button-dark" type="button" hidden>See more homes</button></section>
+    <div class="idx-disclosure"><p>The data displayed relating to real estate for sale comes in part from the IDX Program of Garden State Multiple Listing Service, L.L.C. Real estate listings held by other brokerage firms are marked as IDX Listing.</p><p>Information deemed reliable but not guaranteed. Copyright © 2026 Garden State Multiple Listing Service, L.L.C. All rights reserved.</p></div>
+  </main>
+  <script type="module" src="/search.js"></script>
+</body>
+</html>
