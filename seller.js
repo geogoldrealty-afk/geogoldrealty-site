@@ -17,6 +17,7 @@ function openDialog(id, trigger) {
     const address = [valueForm.elements.street.value.trim(), valueForm.elements.city.value.trim(), 'NJ', valueForm.elements.zip.value.trim()].filter(Boolean).join(', ');
     sellerForm.elements.address.value = valueForm.elements.street.value.trim() ? address : '';
     sellerForm.elements.message.value = sellerForm.elements.address.value ? 'Property address: ' + address + '\n' : '';
+    if (trigger?.dataset.sellerIntent === 'valuation') sellerForm.elements.message.value = 'I would like a complimentary broker review of my home’s value.\n' + sellerForm.elements.message.value;
     const status = sellerForm.querySelector('.seller-status');
     status.textContent = ''; status.dataset.state = '';
     sellerForm.querySelector('[type=submit]').disabled = false;
@@ -80,3 +81,4 @@ valueForm.addEventListener('submit', async event => {
     if (document.querySelector('#home-value').open) { status.dataset.state = 'error'; status.textContent = 'The estimate could not load. Ask John for a custom CMA below, or call (201) 826-5730.'; }
   } finally { clearTimeout(timeout); button.disabled = false; }
 });
+
