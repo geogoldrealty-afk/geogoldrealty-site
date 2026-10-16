@@ -18,7 +18,11 @@ const tabs=[...document.querySelectorAll('[data-market]')];
 const mapElement=document.querySelector('#listing-map');
 const mapMessage=document.querySelector('#map-message');
 const money=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(value||0);
-let market=new URLSearchParams(location.search).get('market')==='rent'?'rent':'buy';
+const searchQuery=new URLSearchParams(location.search);
+const supportedCounties=['Bergen','Essex','Hudson','Passaic','Monmouth','Ocean'];
+const initialCounty=searchQuery.get('county');
+if(supportedCounties.includes(initialCounty))form.elements.county.value=initialCounty;
+let market=searchQuery.get('market')==='rent'?'rent':'buy';
 let listings=[];
 let shown=0;
 let map;
@@ -80,3 +84,4 @@ seeMore.addEventListener('click',showNext);
 form.addEventListener('submit',async(event)=>{event.preventDefault();const button=form.querySelector('[type=submit]');if(button.disabled)return;button.disabled=true;results.replaceChildren();seeMore.hidden=true;status.textContent='Searching live GSMLS listings…';const params=new URLSearchParams(new FormData(form));params.set('market',market);params.set('limit','24');try{const response=await fetch(`/api/idx/listings?${params}`,{signal:AbortSignal.timeout(28000)});const data=await response.json();if(!response.ok||!Array.isArray(data.listings))throw new Error('Live listings could not load. Please contact John for a tailored search.');listings=[...data.listings];const sort=form.elements.sort.value;if(sort==='priceDesc')listings.sort((a,b)=>b.price-a.price);if(sort==='priceAsc')listings.sort((a,b)=>a.price-b.price);shown=0;renderMap();showNext();}catch(error){status.textContent=error.name==='TimeoutError'?'The listing service took too long. Please try again.':error.message;mapMessage.textContent='The map will update when a search returns matching homes.';}finally{button.disabled=false;}});
 setMarket(market);
 initMap();
+

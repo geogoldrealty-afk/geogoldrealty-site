@@ -6,8 +6,10 @@ export default defineConfig({
       input: {
         home: 'index.html',
         property: 'property.html',
-        propertySearch: 'property-search.html'
+        propertySearch: 'property-search.html',
+        privacy: 'privacy.html'
       }
     }
   }
 });
+
