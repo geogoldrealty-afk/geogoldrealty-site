@@ -33,10 +33,11 @@ export default async function handler(req, res) {
   if (!target || !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(target)) return res.status(503).json({ok:false,error:'Online requests are not available yet. Please call John at (201) 826-5730 or email geogoldrealty@gmail.com.'});
   const [first_name,...rest]=lead.name.split(/\s+/);
   try {
-    // The installed CRM already emails property-search inquiries. Preserve that
-    // compatible transport while identifying seller leads by campaign/message.
+    // The installed CRM emails property-search inquiries. Keep that compatible
+    // transport for contact/seller requests and preserve their campaign labels.
     const seller = lead.kind === 'seller-contact';
-    const response=await fetch(target,{method:'POST',body:new URLSearchParams({first_name,last_name:rest.join(' '),email:lead.email,phone:lead.phone,consent:lead.consent,website:lead.website,request_type:seller ? 'property-search' : lead.kind,property_address:lead.address,source:'geogold-website',campaign:lead.kind,message:[seller ? 'SELLER INQUIRY — Preferred contact: ' + lead.contactPreference : '',lead.need,lead.message].filter(Boolean).join('\n')}),signal:AbortSignal.timeout(15000)});
+    const contact = lead.kind === 'contact';
+    const response=await fetch(target,{method:'POST',body:new URLSearchParams({first_name,last_name:rest.join(' '),email:lead.email,phone:lead.phone,consent:lead.consent,website:lead.website,request_type:(seller || contact) ? 'property-search' : lead.kind,property_address:lead.address,source:'geogold-website',campaign:lead.kind,message:[seller ? 'SELLER INQUIRY — Preferred contact: ' + lead.contactPreference : contact ? 'GENERAL CONTACT INQUIRY — Let’s talk' : '',lead.need,lead.message].filter(Boolean).join('\n')}),signal:AbortSignal.timeout(15000)});
     const result=await response.json();
     if (!response.ok || result.ok !== true || !result.lead_id) throw new Error('CRM did not confirm a saved lead.');
     return res.status(200).json({ok:true,reference:result.lead_id});
