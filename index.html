@@ -37,16 +37,10 @@
 
       <section class="split-intro" id="sell">
         <div><p class="eyebrow gold">Thinking of selling?</p><h2>Discover what your home could be worth.</h2><p>Get a local, no-pressure valuation from a broker who knows the market block by block.</p></div>
-        <form class="compact-form lead-form" data-kind="valuation">
-          <label>Property address<input name="address" required placeholder="Street address, city, ZIP" /></label>
-          <label>Your name<input name="name" required autocomplete="name" maxlength="120" /></label>
-          <label>Email<input name="email" type="email" required autocomplete="email" maxlength="254" /></label>
-          <label>Phone (optional)<input name="phone" type="tel" autocomplete="tel" maxlength="25" /></label>
-          <p class="form-help">John will review your property and contact you. This is a request for a broker opinion, not an instant automated estimate.</p>
-          <label class="consent"><input type="checkbox" name="consent" value="yes" required />I agree that John’s team can contact me about this request. I can ask them to stop at any time.</label>
-          <label class="honeypot" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off" /></label>
-          <button class="button button-dark" type="submit">Request valuation</button><p class="form-note" role="status" aria-live="polite"></p>
-        </form>
+        <div class="seller-actions">
+          <button class="button button-dark" type="button" data-open-seller="home-value">What is my Home Worth?</button>
+          <button class="button seller-outline" type="button" data-open-seller="sell-contact">Contact me to Sell your Home</button>
+        </div>
       </section>
 
       <section class="search-panel" id="properties">
@@ -80,6 +74,45 @@
       <section class="contact" id="contact"><div><p class="eyebrow gold">Let’s talk</p><h2>Ready when you are.</h2><p>Whether you are buying, selling, investing, or simply weighing your options, start with a conversation.</p><p><a href="tel:+12018265730">(201) 826-5730</a><br /><a href="mailto:geogoldrealty@gmail.com">geogoldrealty@gmail.com</a><br />230 Passaic Ave, Fairfield, NJ 07004</p></div><form class="contact-form lead-form" data-kind="contact"><label>Name<input name="name" required /></label><label>Email<input type="email" name="email" required /></label><label>Phone<input type="tel" name="phone" /></label><label>I’m interested in<select name="need"><option>Buying</option><option>Selling</option><option>Investing</option><option>Referral</option></select></label><label class="wide">Message<textarea name="message" rows="4"></textarea></label><label class="consent wide"><input type="checkbox" name="consent" value="yes" required />I agree that John’s team can contact me about this request. I can ask them to stop at any time.</label><label class="honeypot" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off" /></label><button class="button button-dark" type="submit">Send inquiry</button><p class="form-note" aria-live="polite"></p></form></section>
     </main>
     <footer><a class="brand footer-brand" href="#top"><img class="brand-logo" src="/assets/geo-gold-logo-B4MOCR03.png" alt="Geo Gold Realty Group LLC" /></a><p>© <span id="year"></span> Geo Gold Realty Group LLC. All rights reserved.</p><p>Broker of Record: John Scardino Jr. · NJ License #1223971</p></footer>
+    <dialog id="home-value" class="seller-dialog" aria-labelledby="home-value-title">
+      <button class="seller-close" type="button" data-close-seller aria-label="Close home valuation">×</button>
+      <div class="seller-dialog-heading"><img class="seller-logo" src="/assets/geo-gold-logo-B4MOCR03.png" alt="Geo Gold Realty" /><p class="eyebrow gold">Thinking of selling?</p><h2 id="home-value-title">What is my home worth?</h2><p>Find a starting point for your next move.</p></div>
+      <div class="seller-dialog-body">
+        <form id="home-value-form" class="seller-form">
+          <label>Street address<input name="street" autocomplete="address-line1" placeholder="e.g., 336 Green Ave" maxlength="200" required /></label>
+          <div class="seller-fields"><label>City<input name="city" autocomplete="address-level2" placeholder="Lyndhurst" maxlength="80" required /></label><label>ZIP code<input name="zip" autocomplete="postal-code" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" placeholder="07071" required /></label></div>
+          <p class="seller-help">New Jersey homes only. Your address is shared with the valuation provider to look up an estimate.</p>
+          <button class="button button-dark" type="submit">Search home value</button>
+          <p id="home-value-status" class="seller-status" role="status" aria-live="polite"></p>
+        </form>
+        <section id="home-value-result" class="home-value-result" hidden aria-label="Your home value">
+          <div class="value-address"><p class="eyebrow">Your property</p><h3 id="value-address"></h3><p id="value-facts"></p></div>
+          <div class="value-card"><h3>Your home value</h3><div class="value-total"><span>Estimated market value</span><strong id="value-amount"></strong></div><p id="value-range"></p><p id="value-source" class="seller-help"></p><details><summary>What does this estimate mean?</summary><p>This automated estimate uses available property and market data. It is a starting point, not an appraisal or a guaranteed sale price. Your home's condition and recent improvements may affect its value.</p></details></div>
+        </section>
+        <div class="seller-cma"><h3>Get a local expert’s opinion.</h3><p>For a pinpoint accurate valuation, let our local experts run a custom comparative market analysis (CMA) for you.</p><button class="button button-dark" type="button" data-open-seller="sell-contact">Contact John about selling</button></div>
+      </div>
+    </dialog>
+    <dialog id="sell-contact" class="seller-dialog" aria-labelledby="sell-contact-title">
+      <button class="seller-close" type="button" data-close-seller aria-label="Close seller inquiry">×</button>
+      <div class="seller-dialog-heading"><img class="seller-logo" src="/assets/geo-gold-logo-B4MOCR03.png" alt="Geo Gold Realty" /><h2 id="sell-contact-title">Let’s talk about selling your home.</h2><p>Tell John a little about your property.</p></div>
+      <div class="seller-dialog-body">
+        <form id="seller-contact-form" class="seller-form">
+          <label>Name<input name="name" autocomplete="name" maxlength="120" required /></label>
+          <label>Email<input name="email" type="email" autocomplete="email" maxlength="254" required /></label>
+          <label>Telephone number (optional)<input name="phone" type="tel" autocomplete="tel" maxlength="25" /></label>
+          <label>How would you prefer we contact you?<select name="contactPreference" required><option value="email">Email</option><option value="phone">Phone</option></select></label>
+          <label>Info about your property<textarea name="message" rows="4" maxlength="2500" placeholder="Property address, improvements, and when you’re thinking of selling" required></textarea></label>
+          <input type="hidden" name="address" />
+          <label class="consent"><input name="consent" type="checkbox" value="yes" required />I agree that Geo Gold Realty can contact me about this selling request using my preferred contact method. I can ask them to stop at any time.</label>
+          <label class="honeypot" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off" /></label>
+          <button class="button button-dark" type="submit">Send</button>
+          <p class="seller-status" role="status" aria-live="polite"></p>
+        </form>
+        <p class="seller-help">Prefer to reach out directly? <a href="tel:+12018265730">(201) 826-5730</a> · <a href="mailto:geogoldrealty@gmail.com">geogoldrealty@gmail.com</a></p>
+      </div>
+    </dialog>
     <script type="module" src="/app.js"></script>
+    <script type="module" src="/seller.js"></script>
   </body>
 </html>
+
