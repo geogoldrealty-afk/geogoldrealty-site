@@ -76,3 +76,6 @@
 .homepage-refresh .footer-socials a:focus-visible{outline:3px solid #fff;outline-offset:4px}
 @media(max-width:760px){.homepage-refresh .footer-socials{grid-column:1;grid-row:auto;justify-content:center;gap:12px}}
 @media(prefers-reduced-motion:reduce){.homepage-refresh .footer-socials a{transition:none}}
+
+/* Company name above the hero service line. */
+.homepage-refresh .hero-company{font-family:"Playfair Display",Georgia,serif;font-size:clamp(1.5rem,2.7vw,2.4rem);font-weight:600;line-height:1.2;letter-spacing:.01em;color:#e3c794;margin:0 0 14px;text-wrap:balance}
