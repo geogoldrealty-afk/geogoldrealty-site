@@ -18,6 +18,11 @@ The currently installed CRM emails property-search requests to the approved Geo 
 
 ## Verification
 
-Local automated tests cover validation, preserving preference/content, the existing notification route, failure without a saved lead reference, and disabled valuation. Browser tests must check desktop/mobile dialogs, Escape/focus, seller success/failure, and the no-provider estimate message. A real marked Preview lead must still be checked in the private CRM and Geo Gold inbox before claiming end-to-end notification delivery for this seller form.
+Four local automated tests passed: validation, preserving preference/content, the existing notification route, failure without a saved lead reference, and disabled valuation. Vercel Preview build passed for commit 2889a9c57764219b1b41074f10216780c1fd01fa, deployment 9KaoM3Gqh9gX9vWxYqFpBQHeCjbs.
+
+Browser checks confirmed both dialogs open, Escape closes the dialog and restores focus, an address is carried from the value popup into the seller form, the phone becomes required when phone contact is selected, and the unavailable-provider response contains no value. No successful mobile viewport override was established; mobile visual QA remains pending.
+
+One marked synthetic seller inquiry, TEST SELLER POPUP 20261015-2248, was submitted from Preview. The saved-lead success path closed the popup. A matching notification was read back in geogoldrealty@gmail.com, subject "New Geo Gold property inquiry: TEST SELLER POPUP 20261015-2248". It contains the seller message and property information. Direct CRM lead/task/activity row readback and test-task cleanup remain pending; do not claim those were inspected. The selected owner-owned CRM is GeoGold Realty CRM; its private link is not included in this public repository.
 
 Production remains unchanged until owner approval. Roll back by reverting this feature commit. No Production environment setting has been changed.
+
