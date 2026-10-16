@@ -1,3 +1,15 @@
+const searchMenuToggle=document.querySelector('.search-header .menu-toggle');
+const searchNavigation=document.querySelector('#search-site-nav');
+if(searchMenuToggle&&searchNavigation){
+ const closeSearchMenu=()=>{searchMenuToggle.setAttribute('aria-expanded','false');searchNavigation.classList.remove('open');};
+ searchMenuToggle.addEventListener('click',()=>{const open=searchMenuToggle.getAttribute('aria-expanded')!=='true';searchMenuToggle.setAttribute('aria-expanded',String(open));searchNavigation.classList.toggle('open',open);});
+ searchNavigation.querySelectorAll('a').forEach(link=>link.addEventListener('click',closeSearchMenu));
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&searchMenuToggle.getAttribute('aria-expanded')==='true'){closeSearchMenu();searchMenuToggle.focus();}});
+ const desktopNavigation=matchMedia('(min-width:1051px)');
+ desktopNavigation.addEventListener('change',closeSearchMenu);
+ window.addEventListener('pageshow',closeSearchMenu);
+}
+
 const form=document.querySelector('#listing-search');
 const results=document.querySelector('#search-results');
 const status=document.querySelector('#search-status');
