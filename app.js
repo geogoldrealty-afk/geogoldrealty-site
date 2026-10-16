@@ -18,7 +18,8 @@ for (const form of document.querySelectorAll('.lead-form')) {
    const result=await response.json();
    if(!response.ok||result.ok!==true||!result.reference)throw new Error(result.error||'Your request could not be confirmed.');
    status.dataset.state='success';status.textContent=`Thank you. Your request was saved. John’s team will contact you. Reference: ${result.reference}`;
-   button.textContent='Request saved';
+   form.reset();
+   button.disabled=false;
   }catch(error){status.dataset.state='error';status.textContent=error.name==='TimeoutError'?`We could not confirm your request. Please call (201) 826-5730 or email ${email}.`:error.message;button.disabled=false;}
  });
 }
