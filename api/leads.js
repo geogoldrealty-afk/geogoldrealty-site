@@ -1,9 +1,9 @@
-const kinds = new Set(['valuation', 'contact', 'property-search']);
+const kinds = new Set(['valuation', 'contact', 'property-search', 'seller-contact']);
 const clean = (value) => typeof value === 'string' ? value.trim() : '';
 
 export function validateLead(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid request.');
-  const data = Object.fromEntries(['kind','name','email','phone','address','message','need','website','consent'].map(k => [k, clean(input[k])]));
+  const data = Object.fromEntries(['kind','name','email','phone','address','message','need','website','consent','contactPreference'].map(k => [k, clean(input[k])]));
   if (!kinds.has(data.kind)) throw new Error('Choose a valid request type.');
   if (data.website) throw new Error('This request could not be accepted.');
   if (!data.name || data.name.length > 120) throw new Error('Enter your name.');
@@ -11,6 +11,12 @@ export function validateLead(input = {}) {
   if (data.phone && !/^\+?[\d\s().-]{7,25}$/.test(data.phone)) throw new Error('Enter a valid phone number.');
   if (!data.email && !data.phone) throw new Error('Enter an email address or phone number.');
   if (data.kind === 'valuation' && !data.address) throw new Error('Enter the property address.');
+  if (data.kind === 'seller-contact') {
+    if (!data.email) throw new Error('Enter your email address.');
+    if (!['email','phone'].includes(data.contactPreference)) throw new Error('Choose how you prefer to be contacted.');
+    if (data.contactPreference === 'phone' && !data.phone) throw new Error('Enter a phone number so John can call you.');
+    if (!data.message) throw new Error('Tell us about your property.');
+  }
   if (data.consent !== 'yes') throw new Error('Please agree to be contacted about this request.');
   if (data.message.length > 3000 || data.address.length > 300 || data.email.length > 254) throw new Error('Your request is too long.');
   return data;
@@ -27,9 +33,13 @@ export default async function handler(req, res) {
   if (!target || !/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(target)) return res.status(503).json({ok:false,error:'Online requests are not available yet. Please call John at (201) 826-5730 or email geogoldrealty@gmail.com.'});
   const [first_name,...rest]=lead.name.split(/\s+/);
   try {
-    const response=await fetch(target,{method:'POST',body:new URLSearchParams({first_name,last_name:rest.join(' '),email:lead.email,phone:lead.phone,consent:lead.consent,website:lead.website,request_type:lead.kind,property_address:lead.address,source:'geogold-website',campaign:lead.kind,message:[lead.need,lead.message].filter(Boolean).join('\n')}),signal:AbortSignal.timeout(15000)});
+    // The installed CRM already emails property-search inquiries. Preserve that
+    // compatible transport while identifying seller leads by campaign/message.
+    const seller = lead.kind === 'seller-contact';
+    const response=await fetch(target,{method:'POST',body:new URLSearchParams({first_name,last_name:rest.join(' '),email:lead.email,phone:lead.phone,consent:lead.consent,website:lead.website,request_type:seller ? 'property-search' : lead.kind,property_address:lead.address,source:'geogold-website',campaign:lead.kind,message:[seller ? 'SELLER INQUIRY — Preferred contact: ' + lead.contactPreference : '',lead.need,lead.message].filter(Boolean).join('\n')}),signal:AbortSignal.timeout(15000)});
     const result=await response.json();
     if (!response.ok || result.ok !== true || !result.lead_id) throw new Error('CRM did not confirm a saved lead.');
     return res.status(200).json({ok:true,reference:result.lead_id});
   } catch {return res.status(502).json({ok:false,error:'We could not confirm that your request was saved. Please call John or email geogoldrealty@gmail.com before trying again.'});}
 }
+
