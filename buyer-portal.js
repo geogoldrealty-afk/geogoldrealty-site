@@ -67,7 +67,7 @@ async function start() {
         } finally {
           createCollection.disabled = false;
         }
-      }, { once: true });
+      });
       return;
     }
 
