@@ -3,6 +3,9 @@ import { neon } from '@neondatabase/serverless';
 
 let schemaReady;
 
+export class PortalAuthError extends Error {}
+export class PortalInputError extends Error {}
+
 function database() {
   if (!process.env.POSTGRES_URL) throw new Error('Database is unavailable.');
   return neon(process.env.POSTGRES_URL);
@@ -11,9 +14,14 @@ function database() {
 export async function requireBuyer(req) {
   const authorization = String(req.headers.authorization || '');
   const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
-  if (!token || !process.env.CLERK_SECRET_KEY) throw new Error('Unauthorized.');
-  const payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
-  if (!payload?.sub) throw new Error('Unauthorized.');
+  if (!token || !process.env.CLERK_SECRET_KEY) throw new PortalAuthError('Unauthorized.');
+  let payload;
+  try {
+    payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
+  } catch {
+    throw new PortalAuthError('Unauthorized.');
+  }
+  if (!payload?.sub) throw new PortalAuthError('Unauthorized.');
   return payload.sub;
 }
 
@@ -85,7 +93,7 @@ export async function buyerDashboard(userId) {
 function listingInput(input = {}) {
   const mlsNumber = /^[0-9]{5,12}$/.test(String(input.mlsNumber || '')) ? String(input.mlsNumber) : '';
   const market = ['buy', 'rent'].includes(input.market) ? input.market : '';
-  if (!mlsNumber || !market) throw new Error('Choose a valid property.');
+  if (!mlsNumber || !market) throw new PortalInputError('Choose a valid property.');
   return { mlsNumber, market };
 }
 
@@ -99,10 +107,20 @@ export async function portalAction(userId, input = {}) {
     const { mlsNumber, market } = listingInput(input);
     const note = String(input.note || '').trim().slice(0, 2000);
     const rawRating = input.rating === '' || input.rating === undefined ? null : Number(input.rating);
-    const rating = rawRating === null ? null : Number.isInteger(rawRating) && rawRating >= 1 && rawRating <= 5 ? rawRating : (() => { throw new Error('Rating must be between one and five.'); })();
-    await sql`INSERT INTO buyer_saved_properties (user_id, mls_number, market, note, rating)
-      VALUES (${userId}, ${mlsNumber}, ${market}, ${note}, ${rating})
-      ON CONFLICT (user_id, mls_number, market) DO UPDATE SET note = EXCLUDED.note, rating = EXCLUDED.rating, updated_at = NOW()`;
+    const rating = rawRating === null ? null : Number.isInteger(rawRating) && rawRating >= 1 && rawRating <= 5 ? rawRating : (() => { throw new PortalInputError('Rating must be between one and five.'); })();
+    const suppliedCollectionId = input.collectionId === undefined || input.collectionId === '' ? undefined : Number(input.collectionId);
+    if (suppliedCollectionId !== undefined && (!Number.isSafeInteger(suppliedCollectionId) || suppliedCollectionId < 1)) throw new PortalInputError('Choose a valid collection.');
+    if (suppliedCollectionId !== undefined) {
+      const collection = await sql`SELECT id FROM buyer_collections WHERE id = ${suppliedCollectionId} AND user_id = ${userId}`;
+      if (!collection.length) throw new PortalInputError('Choose one of your collections.');
+      await sql`INSERT INTO buyer_saved_properties (user_id, mls_number, market, collection_id, note, rating)
+        VALUES (${userId}, ${mlsNumber}, ${market}, ${suppliedCollectionId}, ${note}, ${rating})
+        ON CONFLICT (user_id, mls_number, market) DO UPDATE SET collection_id = EXCLUDED.collection_id, note = EXCLUDED.note, rating = EXCLUDED.rating, updated_at = NOW()`;
+    } else {
+      await sql`INSERT INTO buyer_saved_properties (user_id, mls_number, market, note, rating)
+        VALUES (${userId}, ${mlsNumber}, ${market}, ${note}, ${rating})
+        ON CONFLICT (user_id, mls_number, market) DO UPDATE SET note = EXCLUDED.note, rating = EXCLUDED.rating, updated_at = NOW()`;
+    }
     return { message: 'Home saved.' };
   }
 
@@ -116,7 +134,7 @@ export async function portalAction(userId, input = {}) {
 
   if (action === 'collection') {
     const name = String(input.name || '').trim().slice(0, 80);
-    if (!name) throw new Error('Enter a collection name.');
+    if (!name) throw new PortalInputError('Enter a collection name.');
     await sql`INSERT INTO buyer_collections (user_id, name) VALUES (${userId}, ${name}) ON CONFLICT (user_id, name) DO NOTHING`;
     return { message: 'Collection created.' };
   }
@@ -125,12 +143,26 @@ export async function portalAction(userId, input = {}) {
     const { mlsNumber, market } = listingInput(input);
     const requestType = ['private-tour', 'open-house'].includes(input.requestType) ? input.requestType : 'private-tour';
     const preferredAt = input.preferredAt ? new Date(input.preferredAt) : null;
-    if (preferredAt && Number.isNaN(preferredAt.getTime())) throw new Error('Choose a valid preferred time.');
+    if (preferredAt && Number.isNaN(preferredAt.getTime())) throw new PortalInputError('Choose a valid preferred time.');
     const notes = String(input.notes || '').trim().slice(0, 2000);
     await sql`INSERT INTO buyer_tour_requests (user_id, mls_number, market, request_type, preferred_at, notes)
       VALUES (${userId}, ${mlsNumber}, ${market}, ${requestType}, ${preferredAt ? preferredAt.toISOString() : null}, ${notes})`;
-    return { message: 'Tour request saved for John’s team.' };
+    return { message: 'Tour request submitted.' };
   }
 
-  throw new Error('Unsupported Buyer Portal action.');
+  if (action === 'reschedule') {
+    const id = Number(input.id);
+    const preferredAt = input.preferredAt ? new Date(input.preferredAt) : null;
+    if (!Number.isSafeInteger(id) || id < 1 || !preferredAt || Number.isNaN(preferredAt.getTime())) {
+      throw new PortalInputError('Choose a valid tour and preferred time.');
+    }
+    const updated = await sql`UPDATE buyer_tour_requests
+      SET preferred_at = ${preferredAt.toISOString()}, status = 'reschedule-requested', updated_at = NOW()
+      WHERE id = ${id} AND user_id = ${userId} AND status NOT IN ('cancelled', 'completed')
+      RETURNING id`;
+    if (!updated.length) throw new PortalInputError('That tour request is no longer available.');
+    return { message: 'New tour time requested.' };
+  }
+
+  throw new PortalInputError('Unsupported Buyer Portal action.');
 }
