@@ -46,10 +46,28 @@ async function start() {
     if (state.clerk.user) {
       const name = state.clerk.user.firstName || state.clerk.user.primaryEmailAddress?.emailAddress || 'Buyer';
       const token = await state.clerk.session?.getToken();
-      const dashboardResponse = await fetch('/api/portal/state', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const headers = token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : {};
+      const dashboardResponse = await fetch('/api/portal/state', { headers });
       if (!dashboardResponse.ok) throw new Error('Your dashboard is not ready.');
-      const dashboard = await dashboardResponse.json();
-      auth.replaceChildren(Object.assign(document.createElement('p'), { textContent: `Signed in as ${name}. Your secure dashboard is ready: ${dashboard.dashboard.saved.length} saved homes and ${dashboard.dashboard.tours.length} tour requests.` }));
+      const dashboard = (await dashboardResponse.json()).dashboard;
+      document.querySelector('#portal-saved-count').textContent = dashboard.saved.length;
+      document.querySelector('#portal-collection-count').textContent = dashboard.collections.length;
+      document.querySelector('#portal-tour-count').textContent = dashboard.tours.length;
+      auth.replaceChildren(Object.assign(document.createElement('p'), { textContent: `Signed in as ${name}. Your secure dashboard is ready.` }));
+      const createCollection = document.querySelector('[data-create-collection]');
+      createCollection.disabled = false;
+      createCollection.addEventListener('click', async () => {
+        const name = window.prompt('Name this collection (for example, Top Contenders):');
+        if (!name?.trim()) return;
+        createCollection.disabled = true;
+        try {
+          const response = await fetch('/api/portal/actions', { method: 'POST', headers, body: JSON.stringify({ action: 'collection', name }) });
+          if (!response.ok) throw new Error('Collection unavailable.');
+          document.querySelector('#portal-collection-count').textContent = String(dashboard.collections.length + 1);
+        } finally {
+          createCollection.disabled = false;
+        }
+      }, { once: true });
       return;
     }
 
