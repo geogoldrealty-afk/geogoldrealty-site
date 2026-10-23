@@ -117,10 +117,9 @@ async function buyerContact(userId) {
   return { name: String(name).slice(0, 120), email: String(email).slice(0, 254) };
 }
 
-async function sendTourToCrm(userId, request) {
+async function sendTourToCrm(contact, request) {
   const target = crmTarget();
   if (!target) return { status: 'pending', reference: null };
-  const contact = await buyerContact(userId);
   const [firstName, ...lastName] = contact.name.split(/\s+/);
   const kind = request.requestType === 'open-house' ? 'OPEN HOUSE REQUEST' : 'PRIVATE TOUR REQUEST';
   const when = request.preferredAt ? new Date(request.preferredAt).toLocaleString('en-US', { timeZone: 'America/New_York' }) : 'No preferred time supplied';
@@ -207,11 +206,12 @@ export async function portalAction(userId, input = {}) {
     const preferredAt = input.preferredAt ? new Date(input.preferredAt) : null;
     if (preferredAt && Number.isNaN(preferredAt.getTime())) throw new PortalInputError('Choose a valid preferred time.');
     const notes = String(input.notes || '').trim().slice(0, 2000);
+    const contact = await buyerContact(userId);
     const created = await sql`INSERT INTO buyer_tour_requests (user_id, mls_number, market, request_type, preferred_at, notes, notification_status)
       VALUES (${userId}, ${mlsNumber}, ${market}, ${requestType}, ${preferredAt ? preferredAt.toISOString() : null}, ${notes}, 'pending')
       RETURNING id`;
     const request = { mlsNumber, market, requestType, preferredAt: preferredAt ? preferredAt.toISOString() : null, notes };
-    const notification = await sendTourToCrm(userId, request);
+    const notification = await sendTourToCrm(contact, request);
     await updateTourNotification(sql, created[0].id, userId, notification);
     return { message: notification.status === 'sent' ? 'Tour request submitted and sent to Geo Gold Realty.' : 'Tour request submitted. Geo Gold Realty will follow up shortly.' };
   }
@@ -223,12 +223,13 @@ export async function portalAction(userId, input = {}) {
     if (!Number.isSafeInteger(id) || id < 1 || !preferredAt || Number.isNaN(preferredAt.getTime())) {
       throw new PortalInputError('Choose a valid tour and preferred time.');
     }
+    const contact = await buyerContact(userId);
     const updated = await sql`UPDATE buyer_tour_requests
       SET preferred_at = ${preferredAt.toISOString()}, status = 'reschedule-requested', notification_status = 'pending', updated_at = NOW()
       WHERE id = ${id} AND user_id = ${userId} AND status NOT IN ('cancelled', 'completed')
       RETURNING id, mls_number AS "mlsNumber", market, request_type AS "requestType", notes`;
     if (!updated.length) throw new PortalInputError('That tour request is no longer available.');
-    const notification = await sendTourToCrm(userId, { ...updated[0], preferredAt: preferredAt.toISOString() });
+    const notification = await sendTourToCrm(contact, { ...updated[0], preferredAt: preferredAt.toISOString() });
     await updateTourNotification(sql, id, userId, notification);
     return { message: notification.status === 'sent' ? 'New tour time requested and sent to Geo Gold Realty.' : 'New tour time requested.' };
   }
