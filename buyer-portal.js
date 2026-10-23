@@ -29,6 +29,10 @@ function portalLink(item) {
   return '/property.html?mls=' + encodeURIComponent(item.mlsNumber) + '&market=' + encodeURIComponent(item.market);
 }
 
+function collectionOptions(item, collections) {
+  return '<option value="">No collection</option>' + collections.map(collection => '<option value="' + escapeHtml(collection.id) + '"' + (Number(item.collectionId) === Number(collection.id) ? ' selected' : '') + '>' + escapeHtml(collection.name) + '</option>').join('');
+}
+
 function updateCounts(dashboard) {
   document.querySelector('#portal-saved-count').textContent = dashboard.saved.length;
   document.querySelector('#portal-collection-count').textContent = dashboard.collections.length;
@@ -49,7 +53,7 @@ function renderDashboard(dashboard, headers) {
   const savedList = document.querySelector('#portal-saved-list');
   if (savedList) {
     savedList.innerHTML = dashboard.saved.length
-      ? dashboard.saved.map(item => '<p><a href="' + portalLink(item) + '">MLS #' + escapeHtml(item.mlsNumber) + '</a><br><small>' + escapeHtml(item.note || 'No private note yet.') + (item.rating ? ' · Rating: ' + escapeHtml(item.rating) + '/5' : '') + '</small><br><button class="button button-outline" data-edit-home="' + escapeHtml(item.mlsNumber) + '" data-market="' + escapeHtml(item.market) + '">Edit note / rating</button></p>').join('')
+      ? dashboard.saved.map(item => '<p><a href="' + portalLink(item) + '">MLS #' + escapeHtml(item.mlsNumber) + '</a><br><small>' + escapeHtml(item.note || 'No private note yet.') + (item.rating ? ' · Rating: ' + escapeHtml(item.rating) + '/5' : '') + '</small><br><label><small>Collection</small><select data-collection-home="' + escapeHtml(item.mlsNumber) + '" data-market="' + escapeHtml(item.market) + '">' + collectionOptions(item, dashboard.collections) + '</select></label><br><button class="button button-outline" data-edit-home="' + escapeHtml(item.mlsNumber) + '" data-market="' + escapeHtml(item.market) + '">Edit note / rating</button></p>').join('')
       : '<div><div class="portal-empty__icon" aria-hidden="true">♡</div><h3>Start your shortlist</h3><p>Save a property from a property page to see it here.</p><a class="button button-dark" href="/property-search.html?market=buy">Browse homes</a></div>';
     savedList.querySelectorAll('[data-edit-home]').forEach(button => button.addEventListener('click', async () => {
       const item = dashboard.saved.find(saved => saved.mlsNumber === button.dataset.editHome && saved.market === button.dataset.market);
@@ -65,6 +69,23 @@ function renderDashboard(dashboard, headers) {
       }
     }));
   }
+
+  savedList?.querySelectorAll('[data-collection-home]').forEach(select => select.addEventListener('change', async () => {
+    const item = dashboard.saved.find(saved => saved.mlsNumber === select.dataset.collectionHome && saved.market === select.dataset.market);
+    try {
+      await sendAction(headers, {
+        action: 'save',
+        mlsNumber: select.dataset.collectionHome,
+        market: select.dataset.market,
+        collectionId: select.value || null,
+        note: item?.note || '',
+        rating: item?.rating || '',
+      });
+      location.reload();
+    } catch {
+      window.alert('That collection could not be updated. Please try again.');
+    }
+  }));
 
   const collectionList = document.querySelector('#portal-collection-list');
   if (collectionList) {
