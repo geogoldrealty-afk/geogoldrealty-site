@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Buyer Portal Preview | Geo Gold Realty</title>
+  <link rel="icon" type="image/webp" href="/favicon-geogold.webp" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/index-f7zIrof9.css" />
+  <link rel="stylesheet" href="/repair.css" />
+  <style>
+    .portal-header{background:#050505;border-bottom:1px solid #b28a42}.portal-header__inner{max-width:1180px;margin:auto;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}.portal-header img{display:block;width:130px;height:auto}.portal-header a{color:#fff;text-decoration:none}.portal-header__back{font:600 .9rem Inter,sans-serif}.portal-page{max-width:1180px;margin:auto;padding:3.5rem 2rem 5rem}.portal-kicker{color:#8b6827;font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.portal-title{font:600 clamp(2.35rem,5vw,4.25rem)/1.05 'Playfair Display',serif;margin:.45rem 0 .85rem}.portal-lede{max-width:42rem;font-size:1.1rem;line-height:1.65;color:#4c473f}.preview-note{display:flex;gap:.75rem;align-items:start;margin:2rem 0;padding:1rem 1.2rem;background:#f7f0df;border-left:4px solid #b28a42;line-height:1.45}.preview-note strong{display:block}.portal-grid{display:grid;grid-template-columns:1.35fr .85fr;gap:1.5rem}.portal-card{border:1px solid #ded8ce;background:#fff;padding:1.5rem}.portal-card h2{font:600 1.3rem/1.2 'Playfair Display',serif;margin:0 0 .45rem}.portal-card p{line-height:1.55;color:#625c52}.portal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.4rem}.portal-stat{background:#f6f3ed;padding:1rem}.portal-stat strong{display:block;font:600 2rem/1 'Playfair Display',serif}.portal-stat span{display:block;margin-top:.45rem;font-size:.82rem;color:#625c52}.portal-empty{display:grid;place-items:center;min-height:220px;text-align:center;border:1px dashed #c8c1b6;margin-top:1.2rem;padding:1rem}.portal-empty__icon{font-size:2.5rem;color:#b28a42}.portal-actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.2rem}.portal-actions .button{border:0;cursor:pointer}.portal-actions .button-outline{border:1px solid #050505;background:#fff;color:#050505}.portal-list{list-style:none;padding:0;margin:1.2rem 0 0}.portal-list li{display:flex;justify-content:space-between;gap:1rem;padding:.8rem 0;border-top:1px solid #e7e2d9}.portal-list small{color:#625c52}.portal-steps{display:grid;gap:1rem;margin-top:1.25rem}.portal-step{display:grid;grid-template-columns:2rem 1fr;gap:.8rem;align-items:start}.portal-step b{display:grid;place-items:center;width:2rem;height:2rem;border-radius:50%;background:#050505;color:#e3bd70}.portal-cta{margin-top:2rem;padding:2rem;background:#050505;color:#fff}.portal-cta h2{font:600 1.8rem/1.15 'Playfair Display',serif;margin:0}.portal-cta p{margin:.6rem 0 1.2rem;color:#e7e0d5;line-height:1.5}.portal-cta .button{background:#fff;color:#050505;border:0}@media(max-width:800px){.portal-header__inner,.portal-page{padding-left:1rem;padding-right:1rem}.portal-grid{grid-template-columns:1fr}.portal-stats{grid-template-columns:1fr}.portal-title{font-size:2.6rem}}
+  </style>
+</head>
+<body>
+  <header class="portal-header"><div class="portal-header__inner"><a href="/" aria-label="Geo Gold Realty home"><img src="/assets/geo-gold-logo-B4MOCR03.png" alt="Geo Gold Realty Group LLC" /></a><a class="portal-header__back" href="/property-search.html?market=buy">← Search homes</a></div></header>
+  <main class="portal-page">
+    <p class="portal-kicker">Geo Gold Realty buyer portal</p>
+    <h1 class="portal-title">Keep your next home organized.</h1>
+    <p class="portal-lede">Save listings, build collections, keep private notes, and manage your showing requests from one secure place—on any device.</p>
+    <aside class="preview-note"><span aria-hidden="true">✦</span><div><strong>Buyer Portal Preview</strong>Sign in or create a secure account to use your personal dashboard. Saved homes, notes, collections, and tour requests are available in this Preview.</div></aside>
+    <div class="portal-actions" id="portal-auth"><button class="button button-dark" type="button" data-portal-sign-in>Sign in</button><button class="button button-outline" type="button" data-portal-sign-up>Create an account</button></div>
+    <section class="portal-grid" aria-label="Buyer portal preview">
+      <div class="portal-card"><h2>My homes</h2><p>One dashboard for the homes you save while browsing Geo Gold Realty listings.</p><div class="portal-stats"><div class="portal-stat"><strong id="portal-saved-count">0</strong><span>Saved homes</span></div><div class="portal-stat"><strong id="portal-collection-count">0</strong><span>Collections</span></div><div class="portal-stat"><strong id="portal-tour-count">0</strong><span>Tour requests</span></div></div><div class="portal-empty" id="portal-saved-list"><div><div class="portal-empty__icon" aria-hidden="true">♡</div><h3>Start your shortlist</h3><p>Save a property from the search page to see it here.</p><a class="button button-dark" href="/property-search.html?market=buy">Browse homes</a></div></div></div>
+      <aside class="portal-card"><h2>Collections</h2><p>Group homes the way you think about them.</p><div class="portal-list" id="portal-collection-list" aria-live="polite"><p><small>Create a collection after signing in to organize saved homes.</small></p></div><div class="portal-actions"><button class="button button-outline" type="button" data-create-collection disabled>Create collection</button></div></aside>
+      <div class="portal-card"><h2>Recently viewed</h2><p>Quickly return to the listings you reviewed most recently.</p><div class="portal-empty" id="portal-recent-list"><div><div class="portal-empty__icon" aria-hidden="true">◷</div><p>Your viewed listings will appear here after secure sign-in is enabled.</p></div></div></div>
+      <aside class="portal-card"><h2>Showings & open houses</h2><p>Request a private tour or register for an open house without re-entering your details.</p><div class="portal-steps"><div class="portal-step"><b>1</b><div><strong>Choose a home</strong><br><small>Use any property page to begin a request.</small></div></div><div class="portal-step"><b>2</b><div><strong>Pick a time</strong><br><small>Send a preferred date and time to request a showing.</small></div></div><div class="portal-step"><b>3</b><div><strong>Track it here</strong><br><small>View or request changes from your portal.</small></div></div><div id="portal-tour-list" class="portal-list" aria-live="polite"></div></aside>
+    </section>
+    <section class="portal-cta"><h2>Your buyer account starts here.</h2><p>Sign up is secure. Your saved homes, notes, ratings, collections, viewing history, and showing requests stay connected to your account.</p><a class="button" href="/property-search.html?market=buy">Continue searching</a></section>
+  </main>
+  <script type="module" src="/buyer-portal.js"></script>
+</body>
+</html>
+

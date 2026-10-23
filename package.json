@@ -10,6 +10,8 @@
     "generate:outreach": "node scripts/generate-outreach.js"
   },
   "dependencies": {
+    "@clerk/backend": "^2.23.3",
+    "@neondatabase/serverless": "^1.0.2",
     "vite": "^7.0.0",
     "sharp": "^0.35.3"
   }
