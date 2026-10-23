@@ -41,7 +41,7 @@ async function start() {
     if (!ClerkClient) throw new Error('Authentication service is unavailable.');
     state.clerk = typeof ClerkClient === 'function' ? new ClerkClient(config.publishableKey) : ClerkClient;
     await state.clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
-    const returnUrl = `${location.origin}/buyer-portal.html`;
+    const returnUrl = location.href;
 
     if (state.clerk.user) {
       const name = state.clerk.user.firstName || state.clerk.user.primaryEmailAddress?.emailAddress || 'Buyer';
@@ -50,6 +50,17 @@ async function start() {
       const dashboardResponse = await fetch('/api/portal/state', { headers });
       if (!dashboardResponse.ok) throw new Error('Your dashboard is not ready.');
       const dashboard = (await dashboardResponse.json()).dashboard;
+      const intent = new URLSearchParams(location.search);
+      const mlsNumber = intent.get('save') || intent.get('tour');
+      const market = intent.get('market') || 'buy';
+      if (mlsNumber && /^[0-9]{5,12}$/.test(mlsNumber)) {
+        const request = intent.has('tour')
+          ? { action: 'tour', mlsNumber, market, requestType: 'private-tour', preferredAt: window.prompt('What date and time would you prefer for your tour?') || '' }
+          : { action: 'save', mlsNumber, market };
+        const actionResponse = await fetch('/api/portal/actions', { method: 'POST', headers, body: JSON.stringify(request) });
+        if (!actionResponse.ok) throw new Error('Your request could not be saved.');
+        history.replaceState({}, '', '/buyer-portal.html');
+      }
       document.querySelector('#portal-saved-count').textContent = dashboard.saved.length;
       document.querySelector('#portal-collection-count').textContent = dashboard.collections.length;
       document.querySelector('#portal-tour-count').textContent = dashboard.tours.length;
