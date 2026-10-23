@@ -58,4 +58,8 @@ async function start() {
   }
 }
 
-start();
+if (document.readyState === 'complete') {
+  start();
+} else {
+  window.addEventListener('load', start, { once: true });
+}
