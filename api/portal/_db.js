@@ -108,11 +108,13 @@ export async function portalAction(userId, input = {}) {
     const note = String(input.note || '').trim().slice(0, 2000);
     const rawRating = input.rating === '' || input.rating === undefined ? null : Number(input.rating);
     const rating = rawRating === null ? null : Number.isInteger(rawRating) && rawRating >= 1 && rawRating <= 5 ? rawRating : (() => { throw new PortalInputError('Rating must be between one and five.'); })();
-    const suppliedCollectionId = input.collectionId === undefined || input.collectionId === '' ? undefined : Number(input.collectionId);
-    if (suppliedCollectionId !== undefined && (!Number.isSafeInteger(suppliedCollectionId) || suppliedCollectionId < 1)) throw new PortalInputError('Choose a valid collection.');
+    const suppliedCollectionId = input.collectionId === undefined ? undefined : input.collectionId === null || input.collectionId === '' ? null : Number(input.collectionId);
+    if (suppliedCollectionId !== undefined && suppliedCollectionId !== null && (!Number.isSafeInteger(suppliedCollectionId) || suppliedCollectionId < 1)) throw new PortalInputError('Choose a valid collection.');
     if (suppliedCollectionId !== undefined) {
-      const collection = await sql`SELECT id FROM buyer_collections WHERE id = ${suppliedCollectionId} AND user_id = ${userId}`;
-      if (!collection.length) throw new PortalInputError('Choose one of your collections.');
+      if (suppliedCollectionId !== null) {
+        const collection = await sql`SELECT id FROM buyer_collections WHERE id = ${suppliedCollectionId} AND user_id = ${userId}`;
+        if (!collection.length) throw new PortalInputError('Choose one of your collections.');
+      }
       await sql`INSERT INTO buyer_saved_properties (user_id, mls_number, market, collection_id, note, rating)
         VALUES (${userId}, ${mlsNumber}, ${market}, ${suppliedCollectionId}, ${note}, ${rating})
         ON CONFLICT (user_id, mls_number, market) DO UPDATE SET collection_id = EXCLUDED.collection_id, note = EXCLUDED.note, rating = EXCLUDED.rating, updated_at = NOW()`;
