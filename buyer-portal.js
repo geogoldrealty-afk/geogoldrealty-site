@@ -156,20 +156,23 @@ async function start() {
       const token = await state.clerk.session?.getToken();
       const headers = token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : {};
       const intent = new URLSearchParams(location.search);
-      const mlsNumber = intent.get('save') || intent.get('tour');
+      const isTour = intent.has('tour');
+      const isOpenHouse = intent.has('openHouse');
+      const mlsNumber = intent.get('save') || intent.get('tour') || intent.get('openHouse');
       const market = intent.get('market') || 'buy';
       if (mlsNumber && /^[0-9]{5,12}$/.test(mlsNumber)) {
-        const isTour = intent.has('tour');
-        const preferredAt = isTour ? window.prompt('What date and time would you prefer for your tour?') : '';
-        const contactConsent = isTour && preferredAt !== null
-          ? window.confirm('Geo Gold Realty will receive your account name and email to follow up about this tour. Continue?')
+        const isShowingRequest = isTour || isOpenHouse;
+        const requestLabel = isOpenHouse ? 'open house' : 'tour';
+        const preferredAt = isShowingRequest ? window.prompt('What date and time would you prefer for this ' + requestLabel + '?') : '';
+        const contactConsent = isShowingRequest && preferredAt !== null
+          ? window.confirm('Geo Gold Realty will receive your account name and email to follow up about this ' + requestLabel + '. Continue?')
           : false;
-        if (!isTour || (preferredAt !== null && contactConsent)) {
-          await sendAction(headers, isTour
-            ? { action: 'tour', mlsNumber, market, requestType: 'private-tour', preferredAt: preferredAt || '', contactConsent: true }
+        if (!isShowingRequest || (preferredAt !== null && contactConsent)) {
+          await sendAction(headers, isShowingRequest
+            ? { action: 'tour', mlsNumber, market, requestType: isOpenHouse ? 'open-house' : 'private-tour', preferredAt: preferredAt || '', contactConsent: true }
             : { action: 'save', mlsNumber, market });
         }
-        if (!isTour || preferredAt !== null) history.replaceState({}, '', '/buyer-portal.html');
+        if (!isShowingRequest || preferredAt !== null) history.replaceState({}, '', '/buyer-portal.html');
       }
       const dashboard = await getDashboard(headers);
       updateCounts(dashboard);
