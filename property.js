@@ -106,6 +106,45 @@ function attachInquiryModal(listing) {
   });
 }
 
+
+async function loadExternalScript(src, attributes = {}) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    Object.entries(attributes).forEach(([name, value]) => script.setAttribute(name, value));
+    script.addEventListener('load', resolve, { once: true });
+    script.addEventListener('error', reject, { once: true });
+    script.src = src;
+    document.head.append(script);
+  });
+}
+
+async function recordRecentlyViewed(listing) {
+  try {
+    const configResponse = await fetch('/api/portal/config', { cache: 'no-store' });
+    const config = await configResponse.json();
+    if (!configResponse.ok || !config.ok || !config.publishableKey) return;
+    const encodedDomain = config.publishableKey.split('_')[2];
+    if (!encodedDomain) return;
+    const clerkDomain = atob(encodedDomain).replace(/\$/, '');
+    if (!window.__internal_ClerkUICtor) await loadExternalScript(`https://${clerkDomain}/npm/@clerk/ui@1/dist/ui.browser.js`);
+    if (!window.Clerk) await loadExternalScript(`https://${clerkDomain}/npm/@clerk/clerk-js@6/dist/clerk.browser.js`, { 'data-clerk-publishable-key': config.publishableKey });
+    const ClerkClient = window.Clerk;
+    const clerk = typeof ClerkClient === 'function' ? new ClerkClient(config.publishableKey) : ClerkClient;
+    await clerk?.load?.({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+    const token = await clerk?.session?.getToken?.();
+    if (!token) return;
+    await fetch('/api/portal/actions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'view', mlsNumber: listing.mlsNumber, market: listing.market || 'buy' }),
+    });
+  } catch {
+    // Viewing a public listing must remain available if Buyer Portal services are unavailable.
+  }
+}
+
 function render(listing) {
   const photos = Array.isArray(listing.photos) ? listing.photos.map(safeImage).filter(Boolean) : [];
   const title = escapeHtml(listing.title);
@@ -120,6 +159,7 @@ function render(listing) {
   const primaryImage = root.querySelector('.property-gallery > img');
   root.querySelectorAll('[data-photo]').forEach((button) => button.addEventListener('click', () => { const image = photos[Number(button.dataset.photo)]; if (primaryImage && image) primaryImage.src = image; }));
   attachInquiryModal(listing);
+  void recordRecentlyViewed(listing);
 }
 
 async function load() {
