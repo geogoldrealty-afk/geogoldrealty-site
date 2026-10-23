@@ -167,10 +167,21 @@ async function start() {
         const contactConsent = isShowingRequest && preferredAt !== null
           ? window.confirm('Geo Gold Realty will receive your account name and email to follow up about this ' + requestLabel + '. Continue?')
           : false;
-        if (!isShowingRequest || (preferredAt !== null && contactConsent)) {
-          await sendAction(headers, isShowingRequest
-            ? { action: 'tour', mlsNumber, market, requestType: isOpenHouse ? 'open-house' : 'private-tour', preferredAt: preferredAt || '', contactConsent: true }
-            : { action: 'save', mlsNumber, market });
+        if (isShowingRequest && preferredAt !== null && contactConsent) {
+          if (!preferredAt.trim() || Number.isNaN(new Date(preferredAt).getTime())) {
+            window.alert('Enter a date and time such as October 25, 2026 at 10:00 AM.');
+            return;
+          }
+        }
+        try {
+          if (!isShowingRequest || (preferredAt !== null && contactConsent)) {
+            await sendAction(headers, isShowingRequest
+              ? { action: 'tour', mlsNumber, market, requestType: isOpenHouse ? 'open-house' : 'private-tour', preferredAt, contactConsent: true }
+              : { action: 'save', mlsNumber, market });
+          }
+        } catch {
+          setMessage('Your request could not be submitted. Please try again from the property page.');
+          return;
         }
         if (!isShowingRequest || preferredAt !== null) history.replaceState({}, '', '/buyer-portal.html');
       }
