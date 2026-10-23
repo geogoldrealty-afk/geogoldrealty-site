@@ -81,3 +81,56 @@ export async function buyerDashboard(userId) {
   ]);
   return { saved, collections, tours, recent };
 }
+
+function listingInput(input = {}) {
+  const mlsNumber = /^[0-9]{5,12}$/.test(String(input.mlsNumber || '')) ? String(input.mlsNumber) : '';
+  const market = ['buy', 'rent'].includes(input.market) ? input.market : '';
+  if (!mlsNumber || !market) throw new Error('Choose a valid property.');
+  return { mlsNumber, market };
+}
+
+export async function portalAction(userId, input = {}) {
+  await ensurePortalSchema();
+  const sql = database();
+  await sql`INSERT INTO buyer_profiles (user_id) VALUES (${userId}) ON CONFLICT (user_id) DO NOTHING`;
+  const action = String(input.action || '');
+
+  if (action === 'save') {
+    const { mlsNumber, market } = listingInput(input);
+    const note = String(input.note || '').trim().slice(0, 2000);
+    const rawRating = input.rating === '' || input.rating === undefined ? null : Number(input.rating);
+    const rating = rawRating === null ? null : Number.isInteger(rawRating) && rawRating >= 1 && rawRating <= 5 ? rawRating : (() => { throw new Error('Rating must be between one and five.'); })();
+    await sql`INSERT INTO buyer_saved_properties (user_id, mls_number, market, note, rating)
+      VALUES (${userId}, ${mlsNumber}, ${market}, ${note}, ${rating})
+      ON CONFLICT (user_id, mls_number, market) DO UPDATE SET note = EXCLUDED.note, rating = EXCLUDED.rating, updated_at = NOW()`;
+    return { message: 'Home saved.' };
+  }
+
+  if (action === 'view') {
+    const { mlsNumber, market } = listingInput(input);
+    await sql`INSERT INTO buyer_recently_viewed (user_id, mls_number, market)
+      VALUES (${userId}, ${mlsNumber}, ${market})
+      ON CONFLICT (user_id, mls_number, market) DO UPDATE SET viewed_at = NOW()`;
+    return { message: 'Viewed home saved.' };
+  }
+
+  if (action === 'collection') {
+    const name = String(input.name || '').trim().slice(0, 80);
+    if (!name) throw new Error('Enter a collection name.');
+    await sql`INSERT INTO buyer_collections (user_id, name) VALUES (${userId}, ${name}) ON CONFLICT (user_id, name) DO NOTHING`;
+    return { message: 'Collection created.' };
+  }
+
+  if (action === 'tour') {
+    const { mlsNumber, market } = listingInput(input);
+    const requestType = ['private-tour', 'open-house'].includes(input.requestType) ? input.requestType : 'private-tour';
+    const preferredAt = input.preferredAt ? new Date(input.preferredAt) : null;
+    if (preferredAt && Number.isNaN(preferredAt.getTime())) throw new Error('Choose a valid preferred time.');
+    const notes = String(input.notes || '').trim().slice(0, 2000);
+    await sql`INSERT INTO buyer_tour_requests (user_id, mls_number, market, request_type, preferred_at, notes)
+      VALUES (${userId}, ${mlsNumber}, ${market}, ${requestType}, ${preferredAt ? preferredAt.toISOString() : null}, ${notes})`;
+    return { message: 'Tour request saved for John’s team.' };
+  }
+
+  throw new Error('Unsupported Buyer Portal action.');
+}
