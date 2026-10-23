@@ -1,4 +1,4 @@
-import { verifyToken } from '@clerk/backend';
+import { createClerkClient, verifyToken } from '@clerk/backend';
 import { neon } from '@neondatabase/serverless';
 
 let schemaReady;
@@ -70,8 +70,12 @@ export async function ensurePortalSchema() {
         notes TEXT NOT NULL DEFAULT '',
         status TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('requested','confirmed','reschedule-requested','cancelled','completed')),
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        notification_status TEXT NOT NULL DEFAULT 'not-requested' CHECK (notification_status IN ('not-requested','sent','pending')),
+        crm_reference TEXT,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`;
+      await sql`ALTER TABLE buyer_tour_requests ADD COLUMN IF NOT EXISTS notification_status TEXT NOT NULL DEFAULT 'not-requested'`;
+      await sql`ALTER TABLE buyer_tour_requests ADD COLUMN IF NOT EXISTS crm_reference TEXT`;
     })().catch(error => { schemaReady = undefined; throw error; });
   }
   return schemaReady;
@@ -84,7 +88,7 @@ export async function buyerDashboard(userId) {
   const [saved, collections, tours, recent] = await Promise.all([
     sql`SELECT mls_number AS "mlsNumber", market, note, rating, collection_id AS "collectionId", created_at AS "createdAt" FROM buyer_saved_properties WHERE user_id = ${userId} ORDER BY updated_at DESC LIMIT 100`,
     sql`SELECT id, name, created_at AS "createdAt" FROM buyer_collections WHERE user_id = ${userId} ORDER BY created_at ASC LIMIT 30`,
-    sql`SELECT id, mls_number AS "mlsNumber", market, request_type AS "requestType", preferred_at AS "preferredAt", status FROM buyer_tour_requests WHERE user_id = ${userId} ORDER BY updated_at DESC LIMIT 50`,
+    sql`SELECT id, mls_number AS "mlsNumber", market, request_type AS "requestType", preferred_at AS "preferredAt", status, notification_status AS "notificationStatus" FROM buyer_tour_requests WHERE user_id = ${userId} ORDER BY updated_at DESC LIMIT 50`,
     sql`SELECT mls_number AS "mlsNumber", market, viewed_at AS "viewedAt" FROM buyer_recently_viewed WHERE user_id = ${userId} ORDER BY viewed_at DESC LIMIT 20`,
   ]);
   return { saved, collections, tours, recent };
@@ -95,6 +99,61 @@ function listingInput(input = {}) {
   const market = ['buy', 'rent'].includes(input.market) ? input.market : '';
   if (!mlsNumber || !market) throw new PortalInputError('Choose a valid property.');
   return { mlsNumber, market };
+}
+
+
+function crmTarget() {
+  const target = process.env.CRM_WEB_APP_URL;
+  return target && /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(target) ? target : '';
+}
+
+async function buyerContact(userId) {
+  if (!process.env.CLERK_SECRET_KEY) throw new Error('Authentication is unavailable.');
+  const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+  const user = await clerk.users.getUser(userId);
+  const email = user.emailAddresses.find(address => address.id === user.primaryEmailAddressId)?.emailAddress || user.emailAddresses[0]?.emailAddress || '';
+  const name = [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || user.username || '';
+  if (!email || !name) throw new PortalInputError('Your Buyer Portal account needs a name and email before requesting a tour.');
+  return { name: String(name).slice(0, 120), email: String(email).slice(0, 254) };
+}
+
+async function sendTourToCrm(userId, request) {
+  const target = crmTarget();
+  if (!target) return { status: 'pending', reference: null };
+  const contact = await buyerContact(userId);
+  const [firstName, ...lastName] = contact.name.split(/\s+/);
+  const kind = request.requestType === 'open-house' ? 'OPEN HOUSE REQUEST' : 'PRIVATE TOUR REQUEST';
+  const when = request.preferredAt ? new Date(request.preferredAt).toLocaleString('en-US', { timeZone: 'America/New_York' }) : 'No preferred time supplied';
+  try {
+    const response = await fetch(target, {
+      method: 'POST',
+      body: new URLSearchParams({
+        first_name: firstName,
+        last_name: lastName.join(' '),
+        email: contact.email,
+        phone: '',
+        consent: 'yes',
+        website: '',
+        request_type: 'property-search',
+        property_address: 'MLS #' + request.mlsNumber,
+        source: 'geogold-buyer-portal',
+        campaign: 'buyer-tour-request',
+        message: [kind, 'MLS #' + request.mlsNumber, 'Market: ' + request.market, 'Preferred time: ' + when, request.notes || ''].filter(Boolean).join('\n'),
+      }),
+      signal: AbortSignal.timeout(15000),
+    });
+    const result = await response.json();
+    if (!response.ok || result.ok !== true || !result.lead_id) throw new Error('CRM did not confirm the request.');
+    return { status: 'sent', reference: String(result.lead_id) };
+  } catch {
+    return { status: 'pending', reference: null };
+  }
+}
+
+async function updateTourNotification(sql, id, userId, notification) {
+  await sql`UPDATE buyer_tour_requests
+    SET notification_status = ${notification.status}, crm_reference = ${notification.reference}, updated_at = NOW()
+    WHERE id = ${id} AND user_id = ${userId}`;
 }
 
 export async function portalAction(userId, input = {}) {
@@ -143,27 +202,35 @@ export async function portalAction(userId, input = {}) {
 
   if (action === 'tour') {
     const { mlsNumber, market } = listingInput(input);
+    if (input.contactConsent !== true) throw new PortalInputError('Please agree to share your account contact information for this tour request.');
     const requestType = ['private-tour', 'open-house'].includes(input.requestType) ? input.requestType : 'private-tour';
     const preferredAt = input.preferredAt ? new Date(input.preferredAt) : null;
     if (preferredAt && Number.isNaN(preferredAt.getTime())) throw new PortalInputError('Choose a valid preferred time.');
     const notes = String(input.notes || '').trim().slice(0, 2000);
-    await sql`INSERT INTO buyer_tour_requests (user_id, mls_number, market, request_type, preferred_at, notes)
-      VALUES (${userId}, ${mlsNumber}, ${market}, ${requestType}, ${preferredAt ? preferredAt.toISOString() : null}, ${notes})`;
-    return { message: 'Tour request submitted.' };
+    const created = await sql`INSERT INTO buyer_tour_requests (user_id, mls_number, market, request_type, preferred_at, notes, notification_status)
+      VALUES (${userId}, ${mlsNumber}, ${market}, ${requestType}, ${preferredAt ? preferredAt.toISOString() : null}, ${notes}, 'pending')
+      RETURNING id`;
+    const request = { mlsNumber, market, requestType, preferredAt: preferredAt ? preferredAt.toISOString() : null, notes };
+    const notification = await sendTourToCrm(userId, request);
+    await updateTourNotification(sql, created[0].id, userId, notification);
+    return { message: notification.status === 'sent' ? 'Tour request submitted and sent to Geo Gold Realty.' : 'Tour request submitted. Geo Gold Realty will follow up shortly.' };
   }
 
   if (action === 'reschedule') {
     const id = Number(input.id);
     const preferredAt = input.preferredAt ? new Date(input.preferredAt) : null;
+    if (input.contactConsent !== true) throw new PortalInputError('Please agree to share your account contact information for this change.');
     if (!Number.isSafeInteger(id) || id < 1 || !preferredAt || Number.isNaN(preferredAt.getTime())) {
       throw new PortalInputError('Choose a valid tour and preferred time.');
     }
     const updated = await sql`UPDATE buyer_tour_requests
-      SET preferred_at = ${preferredAt.toISOString()}, status = 'reschedule-requested', updated_at = NOW()
+      SET preferred_at = ${preferredAt.toISOString()}, status = 'reschedule-requested', notification_status = 'pending', updated_at = NOW()
       WHERE id = ${id} AND user_id = ${userId} AND status NOT IN ('cancelled', 'completed')
-      RETURNING id`;
+      RETURNING id, mls_number AS "mlsNumber", market, request_type AS "requestType", notes`;
     if (!updated.length) throw new PortalInputError('That tour request is no longer available.');
-    return { message: 'New tour time requested.' };
+    const notification = await sendTourToCrm(userId, { ...updated[0], preferredAt: preferredAt.toISOString() });
+    await updateTourNotification(sql, id, userId, notification);
+    return { message: notification.status === 'sent' ? 'New tour time requested and sent to Geo Gold Realty.' : 'New tour time requested.' };
   }
 
   throw new PortalInputError('Unsupported Buyer Portal action.');
