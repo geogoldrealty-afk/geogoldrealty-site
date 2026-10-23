@@ -19,6 +19,27 @@ function loadScript(src, attributes = {}) {
   });
 }
 
+function portalLink(item) {
+  return '/property.html?mls=' + encodeURIComponent(item.mlsNumber) + '&market=' + encodeURIComponent(item.market);
+}
+
+function renderDashboard(dashboard, headers) {
+  const savedList = document.querySelector('#portal-saved-list');
+  if (savedList && dashboard.saved.length) {
+    savedList.innerHTML = dashboard.saved.map((item) => '<p><a href="' + portalLink(item) + '">MLS #' + item.mlsNumber + '</a><br><small>' + (item.note || 'No private note yet.') + (item.rating ? ' · Rating: ' + item.rating + '/5' : '') + '</small><br><button class="button button-outline" data-edit-home="' + item.mlsNumber + '" data-market="' + item.market + '">Add note / rating</button></p>').join('');
+    savedList.querySelectorAll('[data-edit-home]').forEach((button) => button.addEventListener('click', async () => {
+      const note = window.prompt('Private note for this home:') || '';
+      const rating = window.prompt('Your rating from 1 to 5 (optional):') || '';
+      const response = await fetch('/api/portal/actions', { method: 'POST', headers, body: JSON.stringify({ action: 'save', mlsNumber: button.dataset.editHome, market: button.dataset.market, note, rating }) });
+      if (response.ok) location.reload();
+    }));
+  }
+  const recentList = document.querySelector('#portal-recent-list');
+  if (recentList && dashboard.recent.length) recentList.innerHTML = dashboard.recent.map((item) => '<p><a href="' + portalLink(item) + '">MLS #' + item.mlsNumber + '</a><br><small>Viewed recently</small></p>').join('');
+  const tourList = document.querySelector('#portal-tour-list');
+  if (tourList && dashboard.tours.length) tourList.innerHTML = dashboard.tours.map((item) => '<p><a href="' + portalLink(item) + '">MLS #' + item.mlsNumber + '</a><br><small>' + item.requestType.replace('-', ' ') + ' · ' + item.status + '</small></p>').join('');
+}
+
 function clerkDomainFromKey(publishableKey) {
   const encodedDomain = publishableKey.split('_')[2];
   if (!encodedDomain) throw new Error('Authentication configuration is invalid.');
@@ -64,6 +85,7 @@ async function start() {
       document.querySelector('#portal-saved-count').textContent = dashboard.saved.length;
       document.querySelector('#portal-collection-count').textContent = dashboard.collections.length;
       document.querySelector('#portal-tour-count').textContent = dashboard.tours.length;
+      renderDashboard(dashboard, headers);
       auth.replaceChildren(Object.assign(document.createElement('p'), { textContent: `Signed in as ${name}. Your secure dashboard is ready.` }));
       const createCollection = document.querySelector('[data-create-collection]');
       createCollection.disabled = false;
