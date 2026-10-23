@@ -45,7 +45,11 @@ async function start() {
 
     if (state.clerk.user) {
       const name = state.clerk.user.firstName || state.clerk.user.primaryEmailAddress?.emailAddress || 'Buyer';
-      auth.replaceChildren(Object.assign(document.createElement('p'), { textContent: `Signed in as ${name}. Your secure dashboard is being prepared.` }));
+      const token = await state.clerk.session?.getToken();
+      const dashboardResponse = await fetch('/api/portal/state', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!dashboardResponse.ok) throw new Error('Your dashboard is not ready.');
+      const dashboard = await dashboardResponse.json();
+      auth.replaceChildren(Object.assign(document.createElement('p'), { textContent: `Signed in as ${name}. Your secure dashboard is ready: ${dashboard.dashboard.saved.length} saved homes and ${dashboard.dashboard.tours.length} tour requests.` }));
       return;
     }
 
