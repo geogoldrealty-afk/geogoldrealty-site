@@ -37,8 +37,10 @@ async function start() {
       'data-clerk-publishable-key': config.publishableKey,
     });
 
-    await window.Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
-    state.clerk = window.Clerk;
+    const ClerkClient = window.Clerk;
+    if (!ClerkClient) throw new Error('Authentication service is unavailable.');
+    state.clerk = typeof ClerkClient === 'function' ? new ClerkClient(config.publishableKey) : ClerkClient;
+    await state.clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
     const returnUrl = `${location.origin}/buyer-portal.html`;
 
     if (state.clerk.user) {
