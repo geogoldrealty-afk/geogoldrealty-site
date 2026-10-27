@@ -1,5 +1,5 @@
 const auth = document.querySelector('#portal-auth');
-const state = { clerk: null };
+const state = { clerk: null, intentInProgress: false };
 
 function setMessage(message) {
   if (!auth) return;
@@ -142,6 +142,8 @@ async function getDashboard(headers) {
 }
 
 async function start() {
+  if (window.__geoGoldBuyerPortalStarted) return;
+  window.__geoGoldBuyerPortalStarted = true;
   try {
     const response = await fetch('/api/portal/config', { cache: 'no-store' });
     const config = await response.json();
@@ -168,30 +170,37 @@ async function start() {
       const isOpenHouse = intent.has('openHouse');
       const mlsNumber = intent.get('save') || intent.get('tour') || intent.get('openHouse');
       const market = intent.get('market') || 'buy';
-      if (mlsNumber && /^[0-9]{5,12}$/.test(mlsNumber)) {
+      if (mlsNumber && /^[0-9]{5,12}$/.test(mlsNumber) && !state.intentInProgress) {
+        state.intentInProgress = true;
         const isShowingRequest = isTour || isOpenHouse;
         const requestLabel = isOpenHouse ? 'open house' : 'tour';
-        const preferredAt = isShowingRequest ? window.prompt('What date and time would you prefer for this ' + requestLabel + '?') : '';
+        auth.replaceChildren(Object.assign(document.createElement('p'), { textContent: `Signed in as ${name}. Complete your ${requestLabel} request below.` }));
+        await new Promise(resolve => window.setTimeout(resolve, 0));
+        const preferredAt = isShowingRequest ? window.prompt('What date and time would you prefer for this ' + requestLabel + '?\nExample: November 1, 2026 at 11:00 AM') : '';
         const contactConsent = isShowingRequest && preferredAt !== null
           ? window.confirm('Geo Gold Realty will receive your account name and email to follow up about this ' + requestLabel + '. Continue?')
           : false;
-        if (isShowingRequest && preferredAt !== null && contactConsent) {
-          if (!preferredAt.trim() || Number.isNaN(new Date(preferredAt).getTime())) {
-            window.alert('Enter a date and time such as October 25, 2026 at 10:00 AM.');
+
+        if (isShowingRequest && preferredAt !== null && contactConsent && (!preferredAt.trim() || Number.isNaN(new Date(preferredAt).getTime()))) {
+          window.alert('Enter a date and time such as November 1, 2026 at 11:00 AM.');
+          history.replaceState({}, '', '/buyer-portal.html');
+        } else {
+          try {
+            if (!isShowingRequest || (preferredAt !== null && contactConsent)) {
+              await sendAction(headers, isShowingRequest
+                ? { action: 'tour', mlsNumber, market, requestType: isOpenHouse ? 'open-house' : 'private-tour', preferredAt, contactConsent: true }
+                : { action: 'save', mlsNumber, market });
+              if (isShowingRequest) window.alert('Your request was submitted.');
+            }
+          } catch (error) {
+            setMessage(error?.message || 'Your request could not be submitted. Please try again from the property page.');
             return;
+          } finally {
+            state.intentInProgress = false;
           }
+          history.replaceState({}, '', '/buyer-portal.html');
         }
-        try {
-          if (!isShowingRequest || (preferredAt !== null && contactConsent)) {
-            await sendAction(headers, isShowingRequest
-              ? { action: 'tour', mlsNumber, market, requestType: isOpenHouse ? 'open-house' : 'private-tour', preferredAt, contactConsent: true }
-              : { action: 'save', mlsNumber, market });
-          }
-        } catch {
-          setMessage('Your request could not be submitted. Please try again from the property page.');
-          return;
-        }
-        if (!isShowingRequest || preferredAt !== null) history.replaceState({}, '', '/buyer-portal.html');
+        state.intentInProgress = false;
       }
       const dashboard = await getDashboard(headers);
       updateCounts(dashboard);
