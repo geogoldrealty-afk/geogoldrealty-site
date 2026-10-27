@@ -78,4 +78,6 @@
 @media(prefers-reduced-motion:reduce){.homepage-refresh .footer-socials a{transition:none}}
 
 /* Company name above the hero service line. */
-.homepage-refresh .hero-company{font-family:"Playfair Display",Georgia,serif;font-size:clamp(1.5rem,2.7vw,2.4rem);font-weight:600;line-height:1.2;letter-spacing:.01em;color:#e3c794;margin:0 0 14px;text-wrap:balance}
+.homepage-refresh .hero-company{font-family:"Playfair Display",Georgia,serif;font-size:clamp(3rem,6.5vw,6rem);font-weight:600;line-height:1.04;letter-spacing:-.045em;color:#e3c794;margin:0 0 14px;text-wrap:balance}
+@media(max-width:760px){.homepage-refresh .hero-company{font-size:clamp(2.7rem,8vw,4rem)}}
+@media(max-width:620px){.homepage-refresh .hero-company{font-size:2.8rem}}
