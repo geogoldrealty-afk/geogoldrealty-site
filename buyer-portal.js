@@ -45,8 +45,9 @@ async function sendAction(headers, body) {
     headers,
     body: JSON.stringify(body),
   });
-  if (!response.ok) throw new Error('Your Buyer Portal change could not be saved.');
-  return response.json();
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || 'Your Buyer Portal change could not be saved.');
+  return result;
 }
 
 function renderDashboard(dashboard, headers) {
@@ -104,7 +105,14 @@ function renderDashboard(dashboard, headers) {
   const tourList = document.querySelector('#portal-tour-list');
   if (tourList) {
     tourList.innerHTML = dashboard.tours.length
-      ? dashboard.tours.map(item => '<p><a href="' + portalLink(item) + '">MLS #' + escapeHtml(item.mlsNumber) + '</a><br><small>' + escapeHtml(item.requestType.replace('-', ' ')) + ' · ' + escapeHtml(item.status) + '</small><br><button class="button button-outline" data-reschedule-tour="' + escapeHtml(item.id) + '">Request a different time</button></p>').join('')
+      ? dashboard.tours.map(item => {
+          const notification = item.notificationStatus === 'sent'
+            ? ' · sent to Geo Gold Realty'
+            : item.notificationStatus === 'pending'
+              ? ' · saved; notification pending'
+              : '';
+          return '<p><a href="' + portalLink(item) + '">MLS #' + escapeHtml(item.mlsNumber) + '</a><br><small>' + escapeHtml(item.requestType.replace('-', ' ')) + ' · ' + escapeHtml(item.status) + escapeHtml(notification) + '</small><br><button class="button button-outline" data-reschedule-tour="' + escapeHtml(item.id) + '">Request a different time</button></p>';
+        }).join('')
       : '<p><small>Your showing requests will appear here.</small></p>';
     tourList.querySelectorAll('[data-reschedule-tour]').forEach(button => button.addEventListener('click', async () => {
       const preferredAt = window.prompt('What new date and time would you prefer?');
@@ -114,8 +122,8 @@ function renderDashboard(dashboard, headers) {
       try {
         await sendAction(headers, { action: 'reschedule', id: button.dataset.rescheduleTour, preferredAt, contactConsent: true });
         location.reload();
-      } catch {
-        window.alert('That change could not be requested. Please try again.');
+      } catch (error) {
+        window.alert(error?.message || 'That change could not be requested. Please try again.');
       }
     }));
   }
