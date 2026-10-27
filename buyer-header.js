@@ -17,6 +17,7 @@ async function loadClerkForHeader() {
 
   let clerk = null;
   let signInRequested = false;
+  let isSignedIn = false;
   const openSignIn = () => {
     if (!clerk || typeof clerk.openSignIn !== 'function') return false;
     signInRequested = false;
@@ -30,6 +31,7 @@ async function loadClerkForHeader() {
   // JavaScript, while a JavaScript-enabled visitor never gets redirected during
   // the asynchronous Clerk loader.
   link.addEventListener('click', event => {
+    if (isSignedIn) return;
     event.preventDefault();
     if (openSignIn()) return;
     signInRequested = true;
@@ -68,10 +70,10 @@ async function loadClerkForHeader() {
     const user = clerk?.user;
     const name = user?.firstName || user?.primaryEmailAddress?.emailAddress;
     if (name) {
+      isSignedIn = true;
       link.textContent = 'Hi, ' + String(name).slice(0, 24);
       link.removeAttribute('aria-busy');
       link.setAttribute('aria-label', 'Open your Buyer Portal');
-      link.addEventListener('click', () => { location.href = '/buyer-portal.html'; });
     } else if (!openSignIn()) {
       link.textContent = 'Login';
       link.removeAttribute('aria-busy');
