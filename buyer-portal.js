@@ -50,6 +50,31 @@ async function sendAction(headers, body) {
   return result;
 }
 
+function requestTourTime(label) {
+  return new Promise(resolve => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'portal-time-dialog';
+    dialog.innerHTML = '<form method="dialog"><h2>Choose a date and time</h2><p>When would you prefer this ' + escapeHtml(label) + '?</p><label>Date and time<input name="preferredAt" type="datetime-local" required></label><p class="portal-time-error" role="alert"></p><menu><button value="cancel" type="button">Cancel</button><button class="button button-dark" value="confirm" type="submit">Continue</button></menu></form>';
+    document.body.append(dialog);
+    const form = dialog.querySelector('form');
+    const input = dialog.querySelector('input');
+    const error = dialog.querySelector('.portal-time-error');
+    const close = value => { dialog.close(); dialog.remove(); resolve(value); };
+    dialog.querySelector('[value="cancel"]').addEventListener('click', () => close(null));
+    dialog.addEventListener('cancel', event => { event.preventDefault(); close(null); }, { once: true });
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      if (!input.value || Number.isNaN(new Date(input.value).getTime())) {
+        error.textContent = 'Please choose both a date and time.';
+        return;
+      }
+      close(new Date(input.value).toISOString());
+    });
+    dialog.showModal();
+    input.focus();
+  });
+}
+
 function renderDashboard(dashboard, headers) {
   const savedList = document.querySelector('#portal-saved-list');
   if (savedList) {
@@ -115,8 +140,8 @@ function renderDashboard(dashboard, headers) {
         }).join('')
       : '<p><small>Your showing requests will appear here.</small></p>';
     tourList.querySelectorAll('[data-reschedule-tour]').forEach(button => button.addEventListener('click', async () => {
-      const preferredAt = window.prompt('What new date and time would you prefer?');
-      if (preferredAt === null || !preferredAt.trim()) return;
+      const preferredAt = await requestTourTime('new requested time');
+      if (!preferredAt) return;
       const contactConsent = window.confirm('Geo Gold Realty will receive your account name and email to help reschedule this tour. Continue?');
       if (!contactConsent) return;
       try {
@@ -176,31 +201,24 @@ async function start() {
         const requestLabel = isOpenHouse ? 'open house' : 'tour';
         auth.replaceChildren(Object.assign(document.createElement('p'), { textContent: `Signed in as ${name}. Complete your ${requestLabel} request below.` }));
         await new Promise(resolve => window.setTimeout(resolve, 0));
-        const preferredAt = isShowingRequest ? window.prompt('What date and time would you prefer for this ' + requestLabel + '?\nExample: November 1, 2026 at 11:00 AM') : '';
-        const contactConsent = isShowingRequest && preferredAt !== null
+        const preferredAt = isShowingRequest ? await requestTourTime(requestLabel) : '';
+        const contactConsent = isShowingRequest && preferredAt
           ? window.confirm('Geo Gold Realty will receive your account name and email to follow up about this ' + requestLabel + '. Continue?')
           : false;
-
-        if (isShowingRequest && preferredAt !== null && contactConsent && (!preferredAt.trim() || Number.isNaN(new Date(preferredAt).getTime()))) {
-          window.alert('Enter a date and time such as November 1, 2026 at 11:00 AM.');
-          history.replaceState({}, '', '/buyer-portal.html');
-        } else {
-          try {
-            if (!isShowingRequest || (preferredAt !== null && contactConsent)) {
-              await sendAction(headers, isShowingRequest
-                ? { action: 'tour', mlsNumber, market, requestType: isOpenHouse ? 'open-house' : 'private-tour', preferredAt, contactConsent: true }
-                : { action: 'save', mlsNumber, market });
-              if (isShowingRequest) window.alert('Your request was submitted.');
-            }
-          } catch (error) {
-            setMessage(error?.message || 'Your request could not be submitted. Please try again from the property page.');
-            return;
-          } finally {
-            state.intentInProgress = false;
+        try {
+          if (!isShowingRequest || (preferredAt && contactConsent)) {
+            await sendAction(headers, isShowingRequest
+              ? { action: 'tour', mlsNumber, market, requestType: isOpenHouse ? 'open-house' : 'private-tour', preferredAt, contactConsent: true }
+              : { action: 'save', mlsNumber, market });
+            if (isShowingRequest) window.alert('Your request was submitted.');
           }
-          history.replaceState({}, '', '/buyer-portal.html');
+        } catch (error) {
+          setMessage(error?.message || 'Your request could not be submitted. Please try again from the property page.');
+          return;
+        } finally {
+          state.intentInProgress = false;
         }
-        state.intentInProgress = false;
+        history.replaceState({}, '', '/buyer-portal.html');
       }
       const dashboard = await getDashboard(headers);
       updateCounts(dashboard);
