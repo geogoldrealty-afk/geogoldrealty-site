@@ -7,9 +7,9 @@ export default defineConfig({
         home: 'index.html',
         property: 'property.html',
         propertySearch: 'property-search.html',
+        buyerPortal: 'buyer-portal.html',
         privacy: 'privacy.html'
       }
     }
   }
 });
-
