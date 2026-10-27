@@ -14,17 +14,20 @@ async function loadClerkForHeader() {
     if (!response.ok || !config.ok || !config.publishableKey) return;
     const domain = clerkDomainFromKey(config.publishableKey);
     if (!domain) return;
-    const loadScript = src => new Promise((resolve, reject) => {
+    const loadScript = (src, attributes = {}) => new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.async = true;
       script.crossOrigin = 'anonymous';
+      Object.entries(attributes).forEach(([name, value]) => script.setAttribute(name, value));
       script.src = src;
       script.addEventListener('load', resolve, { once: true });
       script.addEventListener('error', reject, { once: true });
       document.head.append(script);
     });
     await loadScript('https://' + domain + '/npm/@clerk/ui@1/dist/ui.browser.js');
-    await loadScript('https://' + domain + '/npm/@clerk/clerk-js@6/dist/clerk.browser.js');
+    await loadScript('https://' + domain + '/npm/@clerk/clerk-js@6/dist/clerk.browser.js', {
+      'data-clerk-publishable-key': config.publishableKey,
+    });
     const ClerkClient = window.Clerk;
     const clerk = typeof ClerkClient === 'function' ? new ClerkClient(config.publishableKey) : ClerkClient;
     await clerk?.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
