@@ -71,10 +71,12 @@ export async function ensurePortalSchema() {
         status TEXT NOT NULL DEFAULT 'requested' CHECK (status IN ('requested','confirmed','reschedule-requested','cancelled','completed')),
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         notification_status TEXT NOT NULL DEFAULT 'not-requested' CHECK (notification_status IN ('not-requested','sent','pending')),
+        buyer_confirmation_status TEXT NOT NULL DEFAULT 'not-requested' CHECK (buyer_confirmation_status IN ('not-requested','sent','pending')),
         crm_reference TEXT,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`;
       await sql`ALTER TABLE buyer_tour_requests ADD COLUMN IF NOT EXISTS notification_status TEXT NOT NULL DEFAULT 'not-requested'`;
+      await sql`ALTER TABLE buyer_tour_requests ADD COLUMN IF NOT EXISTS buyer_confirmation_status TEXT NOT NULL DEFAULT 'not-requested'`;
       await sql`ALTER TABLE buyer_tour_requests ADD COLUMN IF NOT EXISTS crm_reference TEXT`;
     })().catch(error => { schemaReady = undefined; throw error; });
   }
@@ -88,7 +90,7 @@ export async function buyerDashboard(userId) {
   const [saved, collections, tours, recent] = await Promise.all([
     sql`SELECT mls_number AS "mlsNumber", market, note, rating, collection_id AS "collectionId", created_at AS "createdAt" FROM buyer_saved_properties WHERE user_id = ${userId} ORDER BY updated_at DESC LIMIT 100`,
     sql`SELECT id, name, created_at AS "createdAt" FROM buyer_collections WHERE user_id = ${userId} ORDER BY created_at ASC LIMIT 30`,
-    sql`SELECT id, mls_number AS "mlsNumber", market, request_type AS "requestType", preferred_at AS "preferredAt", status, notification_status AS "notificationStatus" FROM buyer_tour_requests WHERE user_id = ${userId} ORDER BY updated_at DESC LIMIT 50`,
+    sql`SELECT id, mls_number AS "mlsNumber", market, request_type AS "requestType", preferred_at AS "preferredAt", status, notification_status AS "notificationStatus", buyer_confirmation_status AS "buyerConfirmationStatus" FROM buyer_tour_requests WHERE user_id = ${userId} ORDER BY updated_at DESC LIMIT 50`,
     sql`SELECT mls_number AS "mlsNumber", market, viewed_at AS "viewedAt" FROM buyer_recently_viewed WHERE user_id = ${userId} ORDER BY viewed_at DESC LIMIT 20`,
   ]);
   return { saved, collections, tours, recent };
@@ -119,7 +121,7 @@ async function buyerContact(userId) {
 
 async function sendTourToCrm(contact, request) {
   const target = crmTarget();
-  if (!target) return { status: 'pending', reference: null };
+  if (!target) return { status: 'pending', confirmationStatus: 'pending', reference: null };
   const [firstName, ...lastName] = contact.name.split(/\s+/);
   const kind = request.requestType === 'open-house' ? 'OPEN HOUSE REQUEST' : 'PRIVATE TOUR REQUEST';
   const when = request.preferredAt ? new Date(request.preferredAt).toLocaleString('en-US', { timeZone: 'America/New_York' }) : 'No preferred time supplied';
@@ -137,21 +139,28 @@ async function sendTourToCrm(contact, request) {
         property_address: 'MLS #' + request.mlsNumber,
         source: 'geogold-buyer-portal',
         campaign: 'buyer-tour-request',
+        tour_type: request.requestType,
+        tour_preferred_at: request.preferredAt || '',
+        tour_action: request.isReschedule ? 'reschedule' : 'new-request',
         message: [kind, 'MLS #' + request.mlsNumber, 'Market: ' + request.market, 'Preferred time: ' + when, request.notes || ''].filter(Boolean).join('\n'),
       }),
       signal: AbortSignal.timeout(15000),
     });
     const result = await response.json();
     if (!response.ok || result.ok !== true || !result.lead_id) throw new Error('CRM did not confirm the request.');
-    return { status: 'sent', reference: String(result.lead_id) };
+    return {
+      status: 'sent',
+      confirmationStatus: result.buyer_confirmation_sent === true ? 'sent' : 'pending',
+      reference: String(result.lead_id),
+    };
   } catch {
-    return { status: 'pending', reference: null };
+    return { status: 'pending', confirmationStatus: 'pending', reference: null };
   }
 }
 
 async function updateTourNotification(sql, id, userId, notification) {
   await sql`UPDATE buyer_tour_requests
-    SET notification_status = ${notification.status}, crm_reference = ${notification.reference}, updated_at = NOW()
+    SET notification_status = ${notification.status}, buyer_confirmation_status = ${notification.confirmationStatus}, crm_reference = ${notification.reference}, updated_at = NOW()
     WHERE id = ${id} AND user_id = ${userId}`;
 }
 
@@ -229,10 +238,11 @@ export async function portalAction(userId, input = {}) {
       WHERE id = ${id} AND user_id = ${userId} AND status NOT IN ('cancelled', 'completed')
       RETURNING id, mls_number AS "mlsNumber", market, request_type AS "requestType", notes`;
     if (!updated.length) throw new PortalInputError('That tour request is no longer available.');
-    const notification = await sendTourToCrm(contact, { ...updated[0], preferredAt: preferredAt.toISOString() });
+    const notification = await sendTourToCrm(contact, { ...updated[0], preferredAt: preferredAt.toISOString(), isReschedule: true });
     await updateTourNotification(sql, id, userId, notification);
     return { message: notification.status === 'sent' ? 'New tour time requested and sent to Geo Gold Realty.' : 'New tour time requested.' };
   }
 
   throw new PortalInputError('Unsupported Buyer Portal action.');
 }
+
