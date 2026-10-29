@@ -289,4 +289,3 @@ function safeCell_(value) {
   return typeof value === 'string' && /^[=+@-]/.test(value) ? "'" + value : value;
 }
 
-
