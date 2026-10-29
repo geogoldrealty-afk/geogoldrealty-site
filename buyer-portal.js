@@ -136,7 +136,12 @@ function renderDashboard(dashboard, headers) {
             : item.notificationStatus === 'pending'
               ? ' · saved; notification pending'
               : '';
-          return '<p><a href="' + portalLink(item) + '">MLS #' + escapeHtml(item.mlsNumber) + '</a><br><small>' + escapeHtml(item.requestType.replace('-', ' ')) + ' · ' + escapeHtml(item.status) + escapeHtml(notification) + '</small><br><button class="button button-outline" data-reschedule-tour="' + escapeHtml(item.id) + '">Request a different time</button></p>';
+          const receipt = item.buyerConfirmationStatus === 'sent'
+            ? ' · confirmation email sent'
+            : item.buyerConfirmationStatus === 'pending'
+              ? ' · confirmation email pending'
+              : '';
+          return '<p><a href="' + portalLink(item) + '">MLS #' + escapeHtml(item.mlsNumber) + '</a><br><small>' + escapeHtml(item.requestType.replace('-', ' ')) + ' · ' + escapeHtml(item.status) + escapeHtml(notification) + escapeHtml(receipt) + '</small><br><button class="button button-outline" data-reschedule-tour="' + escapeHtml(item.id) + '">Request a different time</button></p>';
         }).join('')
       : '<p><small>Your showing requests will appear here.</small></p>';
     tourList.querySelectorAll('[data-reschedule-tour]').forEach(button => button.addEventListener('click', async () => {

@@ -91,7 +91,8 @@ function submitLead(payload) {
       property_id: result.lead.property_id, details: JSON.stringify({ address: result.lead.property_address, message: result.lead.message, request_type: payload.request_type || 'property' }),
     });
     try { sendLeadAlert_(result); } catch (error) { recordError_('sendLeadAlert', result.lead.lead_id, error, {}); }
-    return { ok: true, lead_id: result.lead.lead_id, action: result.action };
+    const buyerConfirmationSent = sendBuyerTourReceipt_(payload, result);
+    return { ok: true, lead_id: result.lead.lead_id, action: result.action, buyer_confirmation_sent: buyerConfirmationSent };
   } finally {
     lock.releaseLock();
   }
@@ -162,6 +163,48 @@ function sendLeadAlert_(result) {
   if (!email) return;
   const lead = result.lead;
   MailApp.sendEmail(email, `New property lead: ${lead.full_name}`, `${lead.full_name}\n${lead.phone}\n${lead.email}\n${lead.property_address}\n\nStatus: ${result.action}`);
+}
+
+function sendBuyerTourReceipt_(payload, result) {
+  if (String(payload.source || '') !== 'geogold-buyer-portal') return false;
+  if (String(payload.consent || '').toLowerCase() !== 'yes') return false;
+  const email = String(result.lead.email || '').trim();
+  if (!email) return false;
+  const isReschedule = String(payload.tour_action || '') === 'reschedule';
+  const type = String(payload.tour_type || '') === 'open-house' ? 'open house' : 'private tour';
+  const preferredAt = String(payload.tour_preferred_at || '').trim() || 'the time you selected';
+  const name = String(result.lead.first_name || result.lead.full_name || 'there').trim();
+  const subject = isReschedule
+    ? 'Geo Gold Realty: We received your requested new tour time'
+    : 'Geo Gold Realty: We received your tour request';
+  const body = [
+    `Hello ${name},`,
+    '',
+    `Thank you for your ${type} request for MLS #${String(payload.property_address || '').replace(/^MLS #/, '') || 'your selected home'}.`,
+    `Your preferred time: ${preferredAt}.`,
+    '',
+    'This is a request confirmation, not a confirmed appointment. Geo Gold Realty will follow up to confirm the showing details.',
+    '',
+    'Geo Gold Realty Group LLC',
+    'geogoldrealty@gmail.com',
+    '(201) 826-5730',
+  ].join('\n');
+  try {
+    MailApp.sendEmail({ to: email, subject, body, replyTo: 'geogoldrealty@gmail.com', name: 'Geo Gold Realty' });
+    try {
+      appendObject_(getSheet_(SHEETS.activity), {
+        event_id: Utilities.getUuid(), created_at: new Date().toISOString(), lead_id: result.lead.lead_id,
+        event_type: 'buyer_tour_receipt_sent', actor: 'system', property_id: result.lead.property_id,
+        details: JSON.stringify({ type, reschedule: isReschedule }),
+      });
+    } catch (error) {
+      recordError_('recordBuyerTourReceipt', result.lead.lead_id, error, { source: payload.source, tour_type: payload.tour_type });
+    }
+    return true;
+  } catch (error) {
+    recordError_('sendBuyerTourReceipt', result.lead.lead_id, error, { source: payload.source, tour_type: payload.tour_type });
+    return false;
+  }
 }
 
 function ensureSheet_(ss, name, headers) {
