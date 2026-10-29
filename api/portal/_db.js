@@ -245,4 +245,3 @@ export async function portalAction(userId, input = {}) {
 
   throw new PortalInputError('Unsupported Buyer Portal action.');
 }
-
