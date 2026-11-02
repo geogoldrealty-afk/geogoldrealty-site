@@ -78,6 +78,8 @@ function ggNjDraft_(lead) {
 function ggNjDeliveryDecision_(lead, config, suppressed, now) {
   if (config.enabled !== true) return 'delivery-disabled';
   if (lead.is_test === 'yes') return 'test-record';
+  if (lead.status === 'phone-follow-up') return 'phone-preferred';
+  if (config.activatedAt && Date.parse(lead.created_at) < Date.parse(config.activatedAt)) return 'before-activation';
   if (lead.sent_at || ['sending','sent','unknown'].indexOf(lead.delivery_status) >= 0) return 'already-attempted';
   var email = ggNjEmail_(lead.email);
   if (!email) return 'missing-email';
@@ -156,6 +158,16 @@ function ggNjClassify_(raw) {
   return type;
 }
 
+function ggNjMetadata_(raw) {
+  var first = String(raw.message || '').split('\n')[0];
+  if (first.indexOf('GEO_GOLD_INQUIRY_META:') !== 0) return {};
+  try {
+    var metadata=JSON.parse(first.slice('GEO_GOLD_INQUIRY_META:'.length));
+    return { state:metadata.state === 'NJ' ? 'NJ' : '', contactPreference:metadata.contactPreference === 'phone' ? 'phone' : '',
+      lead_type:['buyer','rental','seller','valuation','general'].indexOf(metadata.lead_type) >= 0 ? metadata.lead_type : '' };
+  } catch (error) { return {}; }
+}
+
 function ggNjSync() {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(1000)) return 'Already running';
@@ -164,11 +176,12 @@ function ggNjSync() {
     var known = new Set(board.map(function(row) { return String(row.lead_id); }));
     var count = 0;
     ggNjRows_('Leads').filter(function(raw) { return raw.lead_id && !known.has(String(raw.lead_id)); }).slice(-100).forEach(function(raw) {
+      var metadata=ggNjMetadata_(raw);
       var lead = {
         lead_id:String(raw.lead_id),created_at:String(raw.created_at || ''),name:String(raw.full_name || ''),
-        email:ggNjEmail_(raw.email),phone:String(raw.phone || ''),state:String(raw.state || '').toUpperCase(),
-        county:GG_NJ.counties.indexOf(raw.county) >= 0 ? raw.county : '', lead_type:ggNjClassify_(raw),
-        source:String(raw.source || ''),consent:String(raw.consent || '').toLowerCase(),status:'pending-review',
+        email:ggNjEmail_(raw.email),phone:String(raw.phone || ''),state:String(raw.state || metadata.state || '').toUpperCase(),
+        county:GG_NJ.counties.indexOf(raw.county) >= 0 ? raw.county : '', lead_type:metadata.lead_type || ggNjClassify_(raw),
+        source:String(raw.source || ''),consent:String(raw.consent || '').toLowerCase(),status:metadata.contactPreference === 'phone' ? 'phone-follow-up' : 'pending-review',
         delivery_status:'not-sent',is_test:/^TEST\b/i.test(String(raw.full_name || '')) || /@example\.(com|net|org)$/i.test(String(raw.email || '')) ? 'yes' : 'no',
         next_follow_up_at:new Date(now.getTime() + 48 * 3600000).toISOString(),follow_up_status:'task-only'
       };
@@ -191,7 +204,8 @@ function ggNjSendApproved() {
   if (!lock.tryLock(1000)) return 'Already running';
   try {
     var properties = PropertiesService.getScriptProperties();
-    var config = {enabled:properties.getProperty('NJ_LEAD_DELIVERY_ENABLED') === 'yes',autoReply:properties.getProperty('NJ_AUTO_REPLY_ENABLED') === 'yes'};
+    var config = {enabled:properties.getProperty('NJ_LEAD_DELIVERY_ENABLED') === 'yes',autoReply:properties.getProperty('NJ_AUTO_REPLY_ENABLED') === 'yes',activatedAt:properties.getProperty('NJ_LEAD_ACTIVATED_AT')};
+    if (!Number.isFinite(Date.parse(config.activatedAt))) return 'Activation date missing; no email sent.';
     var suppressed = ggNjRows_('NJ Suppression').map(function(row) { return ggNjEmail_(row.email); });
     var rows = ggNjRows_('NJ Lead Board'), attempted = 0;
     rows.forEach(function(lead) {
@@ -213,6 +227,15 @@ function ggNjSendApproved() {
 }
 
 function ggNjRun() { ggNjSync(); ggNjSendApproved(); }
+
+function ggNjActivateInbound() {
+  var properties=PropertiesService.getScriptProperties();
+  if (!properties.getProperty('NJ_LEAD_ACTIVATED_AT')) properties.setProperty('NJ_LEAD_ACTIVATED_AT',new Date().toISOString());
+  ggNjInstallTrigger();
+  properties.setProperty('NJ_AUTO_REPLY_ENABLED','yes');
+  properties.setProperty('NJ_LEAD_DELIVERY_ENABLED','yes');
+  console.log('Inbound receipts enabled; activation cutoff recorded; refresh trigger installed.');
+}
 
 function ggNjInstallTrigger() {
   // Explicit operator action. Setup alone does not install a background job.
