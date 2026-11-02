@@ -3,7 +3,9 @@ const clean = (value) => typeof value === 'string' ? value.trim() : '';
 
 export function validateLead(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid request.');
-  const data = Object.fromEntries(['kind','name','email','phone','address','message','need','website','consent','contactPreference'].map(k => [k, clean(input[k])]));
+  const data = Object.fromEntries(['kind','name','email','phone','address','message','need','website','consent','contactPreference','state','leadType'].map(k => [k, clean(input[k])]));
+  if (data.state && !['NJ','OTHER'].includes(data.state)) throw new Error('Choose a valid location.');
+  if (data.leadType && !['buyer','rental'].includes(data.leadType)) throw new Error('Choose a valid inquiry type.');
   if (!kinds.has(data.kind)) throw new Error('Choose a valid request type.');
   if (data.website) throw new Error('This request could not be accepted.');
   if (!data.name || data.name.length > 120) throw new Error('Enter your name.');
@@ -37,10 +39,9 @@ export default async function handler(req, res) {
     // transport for contact/seller requests and preserve their campaign labels.
     const seller = lead.kind === 'seller-contact';
     const contact = lead.kind === 'contact';
-    const response=await fetch(target,{method:'POST',body:new URLSearchParams({first_name,last_name:rest.join(' '),email:lead.email,phone:lead.phone,consent:lead.consent,website:lead.website,request_type:(seller || contact) ? 'property-search' : lead.kind,property_address:lead.address,source:'geogold-website',campaign:lead.kind,message:[seller ? 'SELLER INQUIRY — Preferred contact: ' + lead.contactPreference : contact ? 'GENERAL CONTACT INQUIRY — Let’s talk' : '',lead.need,lead.message].filter(Boolean).join('\n')}),signal:AbortSignal.timeout(15000)});
+    const response=await fetch(target,{method:'POST',body:new URLSearchParams({first_name,last_name:rest.join(' '),email:lead.email,phone:lead.phone,consent:lead.consent,website:lead.website,request_type:(seller || contact) ? 'property-search' : lead.kind,property_address:lead.address,source:'geogold-website',campaign:lead.kind,message:['GEO_GOLD_INQUIRY_META:' + JSON.stringify({state:lead.state,contactPreference:lead.contactPreference,lead_type:seller ? 'seller' : lead.kind === 'valuation' ? 'valuation' : lead.leadType || 'general'}),seller ? 'SELLER INQUIRY — Preferred contact: ' + lead.contactPreference : contact ? 'GENERAL CONTACT INQUIRY — Let’s talk' : '',lead.need,lead.message].filter(Boolean).join('\n')}),signal:AbortSignal.timeout(15000)});
     const result=await response.json();
     if (!response.ok || result.ok !== true || !result.lead_id) throw new Error('CRM did not confirm a saved lead.');
     return res.status(200).json({ok:true,reference:result.lead_id});
   } catch {return res.status(502).json({ok:false,error:'We could not confirm that your request was saved. Please call John or email geogoldrealty@gmail.com before trying again.'});}
 }
-

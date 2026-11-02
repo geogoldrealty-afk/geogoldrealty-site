@@ -1,7 +1,9 @@
 import './seller.css';
+import { addInquiryLocation } from './inquiry-location.js';
 
 const dialogs = [...document.querySelectorAll('.seller-dialog')];
 const sellerForm = document.querySelector('#seller-contact-form');
+addInquiryLocation(sellerForm);
 const valueForm = document.querySelector('#home-value-form');
 let lastTrigger;
 let closeTimer;
@@ -81,4 +83,3 @@ valueForm.addEventListener('submit', async event => {
     if (document.querySelector('#home-value').open) { status.dataset.state = 'error'; status.textContent = 'The estimate could not load. Ask John for a custom CMA below, or call (201) 826-5730.'; }
   } finally { clearTimeout(timeout); button.disabled = false; }
 });
-
