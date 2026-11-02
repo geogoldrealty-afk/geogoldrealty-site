@@ -80,6 +80,18 @@ function fakeCrm() {
   return {ctx,tables,sent,enable(){enabled='yes';},fail(){throwSend=true;}};
 }
 
+test('operator test sends only to the fixed mailbox once, stays marked as test and changes no settings',()=> {
+  const f=fakeCrm(); f.ctx.ggNjSetup();
+  vm.runInContext(readFileSync(new URL('../automation/NjOperatorTest.gs',import.meta.url),'utf8'),f.ctx);
+  assert.equal(f.ctx.ggNjSendOperatorTest(),'sent');
+  assert.equal(f.ctx.ggNjSendOperatorTest(),'sent');
+  assert.equal(f.sent.length,1); assert.equal(f.sent[0].to,'geogoldrealty@gmail.com');
+  const record=f.ctx.ggNjRows_('NJ Lead Board')[0];
+  assert.equal(record.is_test,'yes'); assert.equal(record.follow_up_status,'completed');
+  assert.equal(record.status,'test-completed'); assert.equal(record.assigned_agent,'GEO-SCARDINO');
+  f.ctx.ggNjSendApproved(); assert.equal(f.sent.length,1);
+});
+
 test('setup preserves old CRM; sync is repeatable and routes both agents fairly',()=> {
   const f=fakeCrm(); f.ctx.ggNjSetup(); const before=JSON.stringify(f.tables.Leads[0]);
   const week=f.ctx.ggNjWeek_(new Date());
