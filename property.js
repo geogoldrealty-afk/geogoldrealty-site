@@ -75,6 +75,8 @@ function attachInquiryModal(listing) {
     const name = [fields.get('first_name'), fields.get('last_name')].map((value) => String(value || '').trim()).filter(Boolean).join(' ');
     const payload = {
       kind: 'property-search',
+      state: 'NJ',
+      leadType: query.get('market') === 'rent' ? 'rental' : 'buyer',
       name,
       email: String(fields.get('email') || ''),
       phone: String(fields.get('phone') || ''),
