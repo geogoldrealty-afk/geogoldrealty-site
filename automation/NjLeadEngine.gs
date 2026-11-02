@@ -3,6 +3,7 @@
  * Delivery stays off until NJ_LEAD_DELIVERY_ENABLED=yes is set in Script Properties.
  */
 var GG_NJ = {
+  primaryAgent: { agent_id:'GEO-SCARDINO', name:'Geo Scardino', email:'geogoldrealty@gmail.com', active:'yes' },
   counties: ['Atlantic','Bergen','Burlington','Camden','Cape May','Cumberland','Essex','Gloucester','Hudson','Hunterdon','Mercer','Middlesex','Monmouth','Morris','Ocean','Passaic','Salem','Somerset','Sussex','Union','Warren'],
   schemas: {
     'NJ Lead Board': ['lead_id','created_at','name','email','phone','state','county','lead_type','source','consent','priority','priority_reasons','assigned_agent','status','subject','draft','approved_by','sent_at','delivery_status','is_test','next_follow_up_at','follow_up_status','operator_notes'],
@@ -42,9 +43,13 @@ function ggNjPriority_(lead, now) {
 
 function ggNjAgent_(agents, now) {
   var week = ggNjWeek_(now);
-  var eligible = agents.filter(function(a) {
-    return a.active === 'yes' && a.name && ggNjEmail_(a.email) &&
-      String(a.week_start).slice(0, 10) === week && Number(a.weekly_soi_contacts) >= 5;
+  var active = agents.filter(function(a) {
+    return a.active === 'yes' && a.name && ggNjEmail_(a.email);
+  });
+  // With one agent there is no competitive lead distribution to qualify for.
+  if (active.length === 1) return active[0].agent_id;
+  var eligible = active.filter(function(a) {
+    return String(a.week_start).slice(0, 10) === week && Number(a.weekly_soi_contacts) >= 5;
   });
   eligible.sort(function(a,b) {
     return (Date.parse(a.last_assigned_at) || 0) - (Date.parse(b.last_assigned_at) || 0) ||
@@ -138,7 +143,7 @@ function ggNjSetup() {
     sh.getRange(1,1,1,GG_NJ.schemas[name].length).setBackground('#171717').setFontColor('#ffffff').setFontWeight('bold');
   });
   if (!ggNjRows_('NJ Agents').length) {
-    ['AGENT-1','AGENT-2'].forEach(function(id) { ggNjAppend_('NJ Agents', {agent_id:id, active:'no',weekly_soi_contacts:0}); });
+    ggNjAppend_('NJ Agents', Object.assign({},GG_NJ.primaryAgent,{weekly_soi_contacts:0}));
   }
   return 'NJ lead board ready. Delivery remains disabled until configured.';
 }
