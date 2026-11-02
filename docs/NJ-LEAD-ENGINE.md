@@ -1,6 +1,6 @@
 # Geo Gold New Jersey lead engine
 
-Prepared November 1, 2026. Scope: all 21 NJ counties, two agents, an editable private review queue, inbound request receipts and follow-up tasks.
+Updated November 2, 2026. Scope: all 21 NJ counties, one agent (Geo Scardino, geogoldrealty@gmail.com), an editable private review queue, inbound request receipts and follow-up tasks.
 
 ## What is built
 
@@ -8,7 +8,7 @@ Prepared November 1, 2026. Scope: all 21 NJ counties, two agents, an editable pr
 
 The module imports up to 100 previously unprocessed CRM inquiries per run, keeps their original lead references, creates editable receipt drafts and ranks operational response priority using explicit inquiry, recency and recorded consent. It does not certify that someone is a qualified buyer or predict that they will transact. Phone/email syntax and wealth indicators cannot guarantee lead quality.
 
-Agent assignment alternates by oldest assignment among active agents with at least five recorded sphere-of-influence contacts in the current UTC Monday-start week. Missing/stale activity sends the lead to BROKER-REVIEW rather than losing it. Two inactive placeholder rows are created; actual names must be supplied before activation. Existing assignments can be edited without changing the source CRM.
+In a fresh setup, the roster contains one active agent: Geo Scardino, geogoldrealty@gmail.com. All inquiries are assigned to Geo while he is active. A single agent does not need to meet a weekly activity threshold to receive inquiries. If he is paused, inquiries go to BROKER-REVIEW. If additional agents are added later, assignment alternates by oldest assignment among agents with at least five recorded sphere-of-influence contacts in the current UTC Monday-start week. Existing rosters and assignments are preserved; setup never overwrites populated roster rows.
 
 Automatic replies are fixed, reviewed inquiry acknowledgments. Edited drafts require `status=approved` and an `approved_by` name. Only recent direct website inquiries with recorded consent, a confirmed NJ state and an email are eligible. Imported MLS/skip-trace contacts are not eligible. Tour inquiries keep the existing tour receipt to prevent duplicate emails. Test records, suppressed recipients and uncertain prior deliveries are excluded. One send attempt is persisted before MailApp is called; uncertain delivery requires operator review, never blind retry. This chooses duplicate prevention over automatic retries that might send twice.
 
@@ -18,8 +18,8 @@ After 48 hours the board displays a follow-up due date and `task-only` status. N
 
 1. Confirm the active private CRM spreadsheet and bound script are still the intended John-owned destination. Record the current script version. Do not install into the separate WhatsApp workbook or old publicly shared Scardino CRM.
 2. Add `automation/NjLeadEngine.gs` as a NEW script file alongside the existing live code. Preserve its existing `doPost`, `saveLead_`, `onOpen` and deployment.
-3. Run `ggNjSetup`. It preflights existing tab headers and refuses different columns. It creates only the four named tabs and inactive agent placeholders. Do not run the legacy CRM setup to do this.
-4. Enter the two actual agent names/emails. Fill `active=yes`, `week_start` as Monday YYYY-MM-DD (UTC bookkeeping), and actual `weekly_soi_contacts`. Do not invent activity to satisfy the threshold.
+3. Run `ggNjSetup`. It preflights existing tab headers and refuses different columns. It creates only the four named tabs and Geo's roster entry when the roster is empty. Do not run the legacy CRM setup to do this.
+4. Confirm Geo Scardino's email is geogoldrealty@gmail.com and `active=yes`. Weekly activity is optional for this single-agent setup. If there is an existing populated roster, review it manually rather than overwriting its records.
 5. Run `ggNjSync` with delivery still disabled. Check imported records, routing and editable drafts. The current website CRM does not persist structured state/county or unambiguous buyer/rental need. Confirm those fields on the board. Do not infer NJ from a free-form address or automatically classify by a word in a message.
 6. Conduct an operator-approved test to a controlled mailbox using an explicitly designated test mode/copy. This release blocks test rows from automatic delivery. No actual lead or paid API is needed for the bundled tests.
 7. To activate REAL inbound receipts only after checking recipients, use Script Properties `NJ_LEAD_DELIVERY_ENABLED=yes`. Leave `NJ_AUTO_REPLY_ENABLED` absent for manual approval; set it to `yes` only when fixed acknowledgments should send automatically. Do not enable on historical imported records without reviewing them.
@@ -48,7 +48,7 @@ The Smart Listing Program terms are unconfirmed. The reviewed draft offers a fre
 
 ## Remaining inputs and limits
 
-Needed for installation/activation: current private CRM access/ownership verification; actual names/emails of both agents; broker confirmation of the offer. Needed for prospecting: provider-authorized lead source and its allowed uses, actual OneKey/NJMLS scope, and a separately approved Tracerfy usage budget/credentials if enrichment is wanted. Existing GSMLS display credentials are not enough to establish those rights. Do not paste secrets into chat.
+Agent identity is supplied: Geo Scardino, geogoldrealty@gmail.com. Needed for installation/activation: current private CRM access/ownership verification and broker confirmation of any Smart Listing Program offer. The default remains a free CMA. Needed for prospecting: provider-authorized lead source and its allowed uses, actual OneKey/NJMLS scope, and a separately approved Tracerfy usage budget/credentials if enrichment is wanted. Existing GSMLS display credentials are not enough to establish those rights. Do not paste secrets into chat.
 
 OpenAI generation and Airtable synchronization are not active. The initial module uses editable reviewed templates and the CRM already in service to avoid paid calls and a second, potentially conflicting lead database. AI drafting may be added behind strict structured validation, human review, redacted inputs and a capped budget after account access and actual pricing are checked. All counties are accepted by the workflow; this does not mean a provider covers every county or that leads are already being generated there.
 
