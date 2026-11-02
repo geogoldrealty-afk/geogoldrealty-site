@@ -19,7 +19,16 @@ test('rotation uses oldest eligible assignment and only this week activity',()=>
   const agents=[{...base,agent_id:'A',last_assigned_at:'2026-11-01'},{...base,agent_id:'B',last_assigned_at:''}];
   assert.equal(ctx.ggNjAgent_(agents,now),'B');
   agents[1].week_start='2026-10-19'; assert.equal(ctx.ggNjAgent_(agents,now),'A');
-  agents[0].active='no'; assert.equal(ctx.ggNjAgent_(agents,now),'BROKER-REVIEW');
+  agents[0].active='no'; assert.equal(ctx.ggNjAgent_(agents,now),'B');
+  agents[1].active='no'; assert.equal(ctx.ggNjAgent_(agents,now),'BROKER-REVIEW');
+});
+test('single-agent setup seeds Geo Scardino once and assigns without a weekly activity gate',()=> {
+  const f=fakeCrm(); f.ctx.ggNjSetup(); f.ctx.ggNjSetup();
+  const agents=f.ctx.ggNjRows_('NJ Agents');
+  assert.equal(agents.length,1); assert.equal(agents[0].name,'Geo Scardino');
+  assert.equal(agents[0].email,'geogoldrealty@gmail.com');
+  assert.equal(f.ctx.ggNjAgent_(agents,now),'GEO-SCARDINO');
+  agents[0].active='no'; assert.equal(f.ctx.ggNjAgent_(agents,now),'BROKER-REVIEW');
 });
 test('source, consent, suppression, stale records and test data prevent sending',()=> {
   const ctx=engine(), config={enabled:true,autoReply:true};
