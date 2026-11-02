@@ -74,7 +74,7 @@ function fakeCrm() {
   const ss={getSheetByName:name=>tables[name]?sheet(name):null,insertSheet:name=>{tables[name]=[];return sheet(name);}};
   const sent=[]; let enabled='no',throwSend=false;
   const ctx=engine({SpreadsheetApp:{getActive:()=>ss,flush(){}},LockService:{getScriptLock:()=>({tryLock:()=>true,releaseLock(){}})},
-    PropertiesService:{getScriptProperties:()=>({getProperty:key=>key==='NJ_LEAD_DELIVERY_ENABLED'?enabled:'no'})},
+    PropertiesService:{getScriptProperties:()=>({getProperty:key=>key==='NJ_LEAD_DELIVERY_ENABLED'?enabled:key==='NJ_LEAD_ACTIVATED_AT'?'2026-10-01T00:00:00Z':'no'})},
     MailApp:{getRemainingDailyQuota:()=>50,sendEmail:message=>{sent.push(message);if(throwSend)throw Error('synthetic delivery uncertainty');}}
   });
   return {ctx,tables,sent,enable(){enabled='yes';},fail(){throwSend=true;}};
