@@ -1,3 +1,4 @@
+import { addInquiryLocation } from './inquiry-location.js';
 const email='geogoldrealty@gmail.com';
 document.querySelector('#year').textContent=new Date().getFullYear();
 const idxYear=document.querySelector('#idx-year');if(idxYear)idxYear.textContent=new Date().getFullYear();
@@ -7,6 +8,7 @@ toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expand
 nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{toggle.setAttribute('aria-expanded','false');nav.classList.remove('open');}));
 
 for (const form of document.querySelectorAll('.lead-form')) {
+ addInquiryLocation(form);
  form.addEventListener('submit',async(event)=>{
   event.preventDefault();
   const status=form.querySelector('.form-note');const button=form.querySelector('[type=submit]');
